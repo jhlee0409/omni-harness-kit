@@ -1,0 +1,28 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hk-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e293b"/><stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#sheen)"/>
+  <rect x="0" y="0" width="10" height="640" fill="url(#hk-bg)"/>
+
+  <!-- logo mark -->
+  <g transform="translate(150,192)">
+    <rect width="256" height="256" rx="58" fill="url(#hk-bg)"/>
+    <g fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M104 74 H74 V182 H104"/>
+      <path d="M152 74 H182 V182 H152"/>
+    </g>
+    <path d="M98 132 l20 23 l42 -50" fill="none" stroke="#34d399" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- wordmark + copy -->
+  <text x="470" y="278" font-family="Helvetica, Arial, sans-serif" font-size="92" font-weight="bold" fill="#f8fafc">harness-kit</text>
+  <text x="474" y="334" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">Claude Code plugin · introspects your repo's stack</text>
+  <text x="474" y="410" font-family="Helvetica, Arial, sans-serif" font-size="40" fill="#c4b5fd">Point it at any repo —</text>
+  <text x="474" y="462" font-family="Helvetica, Arial, sans-serif" font-size="40" fill="#c4b5fd">get a harness tailored to its stack.</text>
+</svg>

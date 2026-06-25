@@ -1,13 +1,22 @@
-# Harness Kit
+<p align="center">
+  <img src="docs/logo.svg" width="112" alt="Harness Kit logo">
+</p>
 
-[![CI](https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Release](https://img.shields.io/github/v/release/jhlee0409/claude-harness-kit?sort=semver)](https://github.com/jhlee0409/claude-harness-kit/releases)
+<h1 align="center">Harness Kit</h1>
 
-**Most Claude Code harnesses ship the same config to every repo. Harness Kit reads
-yours first.** It introspects your repo's tech stack and generates a harness
-tailored to it — a `CLAUDE.md` spine, a stack-specific architect agent, and a
-verify hook wired to your repo's *real* test/lint commands.
+<p align="center">
+  <a href="https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml"><img src="https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/jhlee0409/claude-harness-kit/releases"><img src="https://img.shields.io/github/v/release/jhlee0409/claude-harness-kit?sort=semver" alt="Release"></a>
+</p>
+
+<p align="center">
+  <b>Most Claude Code harnesses ship the same config to every repo.<br>Harness Kit reads yours first.</b>
+</p>
+
+It introspects your repo's tech stack and generates a harness tailored to it — a
+`CLAUDE.md` spine, a stack-specific architect agent, and a verify hook wired to
+your repo's *real* test/lint commands.
 
 ![Running /harness-kit:introspect in Claude Code](docs/demo.gif)
 
