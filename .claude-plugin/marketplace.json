@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "harness-kit-marketplace",
+  "owner": { "name": "Jack Lee" },
+  "description": "Marketplace hosting the Harness Kit plugin — a portable engineering harness + repo introspect generator.",
+  "plugins": [
+    {
+      "name": "harness-kit",
+      "source": "./",
+      "description": "Portable engineering harness (plan → work → verify → feedback) + an introspect skill that tailors .claude/ to a repo's stack."
+    }
+  ]
+}

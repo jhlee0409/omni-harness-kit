@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Shell syntax + lint
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          bash -n skills/introspect/detect.sh
+          bash -n hooks/scripts/protected-branch-guard.sh
+          bash -n tests/detect_test.sh
+          shellcheck -S warning skills/introspect/detect.sh hooks/scripts/protected-branch-guard.sh || true
+
+      - name: Detection-engine tests
+        run: bash tests/detect_test.sh
+
+      - name: Validate plugin manifest (strict)
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          # `claude plugin validate` is a local schema check (no API call).
+          claude plugin validate . --strict
