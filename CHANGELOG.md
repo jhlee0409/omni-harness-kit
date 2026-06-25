@@ -20,7 +20,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Non-blocking by default (reminds, does not auto-run); opt into enforcement with
   `"blocking": true`. 4-case isolation test suite.
 - `change-verifier` read-only critic agent.
-- `protected-branch-guard` PreToolUse hook (asks before commit/push on a protected branch).
+- `protected-branch-guard` PreToolUse hook (asks before commit/push on a protected
+  branch). Branches are configurable per repo via `.claude/harness-kit.json`
+  `protected_branches` — precedence: env override > repo config > built-in default.
+  Now reads the branch from `CLAUDE_PROJECT_DIR` (not the hook's cwd).
+- `.claude/harness-kit.json` is the single per-repo config for both hooks
+  (`verify_command`, `blocking`, `protected_branches`).
+- `update-block.sh` — idempotent marked-block updater so an introspect re-run
+  replaces its own `CLAUDE.md` block instead of stacking copies.
+- Test suites: detection (23) + verify-loop (4) + guard (6) + update-block (4); CI
+  runs every `tests/*_test.sh`.
 - Plugin + marketplace manifests, MIT license, community-profile files, CI.
 
 [Unreleased]: https://github.com/jhlee0409/claude-harness-kit/commits/main

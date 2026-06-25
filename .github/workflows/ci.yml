@@ -18,16 +18,12 @@ jobs:
       - name: Shell syntax + lint
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          for f in skills/introspect/detect.sh hooks/scripts/protected-branch-guard.sh \
-                   hooks/scripts/verify-loop.sh tests/detect_test.sh tests/verify_loop_test.sh; do
-            bash -n "$f"
-          done
-          shellcheck -S warning skills/introspect/detect.sh hooks/scripts/*.sh || true
+          for f in skills/introspect/*.sh hooks/scripts/*.sh tests/*.sh; do bash -n "$f"; done
+          shellcheck -S warning skills/introspect/*.sh hooks/scripts/*.sh || true
 
-      - name: Tests (detection engine + verify-loop hook)
+      - name: Tests (detection, verify-loop, guard, update-block)
         run: |
-          bash tests/detect_test.sh
-          bash tests/verify_loop_test.sh
+          for t in tests/*_test.sh; do echo "== $t =="; bash "$t"; done
 
       - name: Validate plugin manifest (strict)
         run: |

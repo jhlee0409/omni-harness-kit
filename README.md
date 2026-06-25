@@ -60,6 +60,26 @@ The detector follows the proven scaffolding/introspection playbook
 4. Separate "what the repo declares" from "what is installed on the machine".
 5. Detect the declared (meta-)framework; mark generated files for safe re-runs.
 
+## Configuration
+
+`introspect` generates `.claude/harness-kit.json` in the target repo — the single
+config both hooks read (precedence: env override > this file > built-in default):
+
+```json
+{
+  "verify_command": "tsc --noEmit && vitest run",
+  "blocking": false,
+  "protected_branches": ["main", "master", "develop", "release"]
+}
+```
+
+Quick env toggles: `HARNESS_GUARD_OFF=1`, `HARNESS_VERIFY_OFF=1`,
+`HARNESS_PROTECTED_BRANCHES="main release"`.
+
+Re-running `introspect` is safe — it replaces its own marked block in `CLAUDE.md`
+(via `update-block.sh`) instead of stacking copies.
+
 ## Status
 
-Early PoC. Validated end-to-end against a TypeScript MCP-server repo. License: MIT.
+Early PoC. Validated end-to-end against TypeScript/MCP and Python/Gradio repos.
+37 tests across detection, hooks, and the block updater. License: MIT.

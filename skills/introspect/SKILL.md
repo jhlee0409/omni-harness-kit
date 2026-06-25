@@ -89,10 +89,15 @@ directly.
 1. **Root `<target>/CLAUDE.md`** — the spine MUST live at the repo ROOT (only
    `./CLAUDE.md` is auto-loaded; a `.claude/CLAUDE.md` is NOT). Two modes:
    - **No CLAUDE.md exists** → write the full `templates/CLAUDE.md.spine`.
-   - **A CLAUDE.md already exists** → do NOT clobber it. Append a marked block
-     `<!-- harness-kit:start ... -->` … `<!-- harness-kit:end -->` containing a
-     condensed spine under a `## Engineering harness` heading. The markers make
-     re-runs idempotent (replace only the block; Lesson 5 generated-file marking).
+   - **A CLAUDE.md already exists** → do NOT clobber it. Write a marked block
+     `<!-- harness-kit:start ... -->` … `<!-- harness-kit:end -->` (a condensed
+     spine under a `## Engineering harness` heading) using the idempotent updater
+     so a re-run replaces its own block instead of stacking a second copy:
+     ```bash
+     printf '%s' "$BLOCK" | bash "${CLAUDE_PLUGIN_ROOT}/skills/introspect/update-block.sh" \
+       <target>/CLAUDE.md '<!-- harness-kit:start' '<!-- harness-kit:end -->'
+     ```
+     (`$BLOCK` includes both markers. Lesson 5 generated-file marking.)
    Fill in either case:
    - `{{PROJECT_NAME}}` — from the manifest `name`.
    - `{{STACK_LINES}}` — one bullet per detected language/framework, citing the
@@ -109,15 +114,22 @@ directly.
    `{{TEST_MANDATE}}` ("Write the failing test first." for backend/library;
    "Add/extend tests for the change." for frontend).
 
-3. **`.claude/harness-kit.json`** (the verify-loop config the plugin's Stop hook
-   reads). Write the detected fast check as `verify_command` — prefer
-   `typecheck_cmd && test_cmd` when both exist, else whichever is present
-   (e.g. `"tsc --noEmit && vitest run"`, `"mypy . && pytest"`, `"pytest"`):
+3. **`.claude/harness-kit.json`** — the single per-repo config both plugin hooks
+   read (precedence for the hooks: env override > this file > built-in default).
    ```json
-   { "verify_command": "<typecheck && test>", "blocking": false }
+   {
+     "verify_command": "<typecheck && test>",
+     "blocking": false,
+     "protected_branches": ["main", "master", "develop", "release"]
+   }
    ```
-   Leave `blocking: false` (the hook reminds, non-intrusive); the user opts into
-   enforcement by flipping it. Omit the file if no check command was detected.
+   - `verify_command` — the detected fast check (prefer `typecheck_cmd && test_cmd`,
+     else whichever exists: `"tsc --noEmit && vitest run"`, `"mypy . && pytest"`,
+     `"pytest"`). The verify-loop Stop hook surfaces it when code changed. Omit if
+     no check was detected.
+   - `blocking` — leave `false` (reminds, non-intrusive); the user flips it to enforce.
+   - `protected_branches` — seed from the repo's real long-lived branches; the
+     protected-branch guard asks before commit/push on these.
 
 4. **Scaffolding** (only if absent): `<target>/specs/.gitkeep`,
    `<target>/docs/adr/0000-record-architecture-decisions.md` (a one-paragraph
