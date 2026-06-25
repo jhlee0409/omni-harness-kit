@@ -16,6 +16,7 @@ real test-runner, build, and lint commands.
 | `skills/introspect/` | **The core.** Scans a target repo (language / framework / test-runner / package-manager / monorepo / data-layer), then generates a tailored harness: a thin `CLAUDE.md` spine + a stack-specific `*-architect` agent. |
 | `agents/change-verifier.md` | A read-only critic that independently proves a change is complete (callsites, wiring, tests, real-run evidence) before it's reported done. |
 | `hooks/protected-branch-guard.sh` | A `PreToolUse` guard that asks before a `git commit`/`git push` on a protected branch. Fires in every repo the plugin is installed into. |
+| `hooks/verify-loop.sh` | A `Stop` hook — the **feedback** half of the loop. When code changed and a verify command is configured (the generated `.claude/harness-kit.json`), it surfaces that command so work is verified before "done". Non-blocking by default; opt into enforcement with `"blocking": true`. |
 | `templates/` | The spine + architect templates `introspect` fills. |
 
 ## Install

@@ -83,6 +83,26 @@ check "$j" "['languages']" "python" "python detected"
 check "$j" "['frameworks']" "gradio" "gradio detected"
 check "$j" "['test_runner']" "pytest" "pytest from pyproject"
 
+echo "[6] verify-loop commands (typecheck fallback + lint from script)"
+f="$TMP/checks"; mkdir -p "$f"
+cat > "$f/package.json" <<'J'
+{"name":"c","scripts":{"test":"vitest run","lint":"eslint src"},"devDependencies":{"vitest":"^1","typescript":"^5","eslint":"^9"}}
+J
+: > "$f/tsconfig.json"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['typecheck_cmd']" "tsc --noEmit" "typecheck fallback (tsc --noEmit)"
+check "$j" "['lint_cmd']" "eslint src" "lint from repo script (not shifted)"
+check "$j" "['test_cmd']" "vitest run" "test_cmd unshifted with empty typecheck"
+
+echo "[7] polyglot: python root + node subtree (per-subtree, always-scan)"
+f="$TMP/poly"; mkdir -p "$f/frontend"
+printf '[project]\ndependencies=["fastapi","pytest"]\n' > "$f/pyproject.toml"
+: > "$f/frontend/package.json"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['languages']" "python" "root python detected"
+check "$j" "['monorepo']" "true" "polyglot flagged monorepo"
+check "$j" "['members']" "frontend" "node subtree surfaced as member"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

@@ -109,7 +109,17 @@ directly.
    `{{TEST_MANDATE}}` ("Write the failing test first." for backend/library;
    "Add/extend tests for the change." for frontend).
 
-3. **Scaffolding** (only if absent): `<target>/specs/.gitkeep`,
+3. **`.claude/harness-kit.json`** (the verify-loop config the plugin's Stop hook
+   reads). Write the detected fast check as `verify_command` — prefer
+   `typecheck_cmd && test_cmd` when both exist, else whichever is present
+   (e.g. `"tsc --noEmit && vitest run"`, `"mypy . && pytest"`, `"pytest"`):
+   ```json
+   { "verify_command": "<typecheck && test>", "blocking": false }
+   ```
+   Leave `blocking: false` (the hook reminds, non-intrusive); the user opts into
+   enforcement by flipping it. Omit the file if no check command was detected.
+
+4. **Scaffolding** (only if absent): `<target>/specs/.gitkeep`,
    `<target>/docs/adr/0000-record-architecture-decisions.md` (a one-paragraph
    ADR-process starter). Skip if the repo already has these.
 

@@ -22,20 +22,23 @@ INSTALLED="$(for b in node npm pnpm yarn bun python3 go cargo deno; do installed
 
 languages=""; frameworks=""; test_runner=""; test_cmd=""; build_cmd=""; dev_cmd=""
 pkg_manager=""; monorepo="false"; data_layer=""; project_name=""
+typecheck_cmd=""; lint_cmd=""
 
 add() { local var="$1" val="$2"; [ -n "$val" ] && eval "$var=\"\${$var:+\$$var,}$val\""; }
 
 # --- L1+L2: Node — declaration layer (package.json + lockfile + config files) ---
 if [ -f package.json ]; then
   add languages "node"
-  # Tab-delimited so values that contain spaces (e.g. "tsc --watch") stay intact.
-  IFS=$'\t' read -r project_name dev_cmd build_cmd test_cmd < <(python3 - <<'PY' 2>/dev/null
+  # US (\x1f) delimited — a non-whitespace separator so EMPTY middle fields (e.g.
+  # no typecheck script) are preserved; tab would collapse (tab is IFS-whitespace).
+  IFS=$'\x1f' read -r project_name dev_cmd build_cmd test_cmd typecheck_cmd lint_cmd < <(python3 - <<'PY' 2>/dev/null
 import json
 try: d=json.load(open("package.json"))
 except Exception: d={}
 s=d.get("scripts",{}) or {}
-f=[d.get("name",""), s.get("dev",s.get("start","")) or "-", s.get("build","-"), s.get("test","-")]
-print("\t".join(x.replace("\t"," ") for x in f))
+f=[d.get("name",""), s.get("dev",s.get("start","")) or "-", s.get("build","-"), s.get("test","-"),
+   s.get("typecheck",s.get("type-check","")), s.get("lint","")]
+print("\x1f".join((x or "").replace("\x1f"," ") for x in f))
 PY
 )
   # TypeScript?
@@ -72,6 +75,14 @@ PY
   elif [ -f bun.lockb ] || [ -f bun.lock ]; then pkg_manager="bun"
   elif [ -f package-lock.json ]; then pkg_manager="npm"
   fi
+  # Fast checks for the verify loop — repo's own script first, else tool presence.
+  [ -z "$typecheck_cmd" ] && case " $languages " in *typescript*) typecheck_cmd="tsc --noEmit" ;; esac
+  if [ -z "$lint_cmd" ]; then
+    case " $deps " in
+      *" eslint "*) lint_cmd="eslint ." ;;
+      *" @biomejs/biome "*) lint_cmd="biome check" ;;
+    esac
+  fi
 fi
 
 # --- Python ---
@@ -83,6 +94,12 @@ if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
   grep -qsiE 'flask'     pyproject.toml requirements.txt 2>/dev/null && add frameworks "flask"
   grep -qsiE 'gradio'    pyproject.toml requirements.txt 2>/dev/null && add frameworks "gradio"
   grep -qsiE 'streamlit' pyproject.toml requirements.txt 2>/dev/null && add frameworks "streamlit"
+  # Fast checks for the verify loop.
+  { [ -z "$typecheck_cmd" ] && grep -qsiE 'mypy|pyright' pyproject.toml requirements.txt 2>/dev/null; } && typecheck_cmd="mypy ."
+  if [ -z "$lint_cmd" ]; then
+    grep -qsiE 'ruff'   pyproject.toml requirements.txt 2>/dev/null && lint_cmd="ruff check ."
+    { [ -z "$lint_cmd" ] && grep -qsiE 'flake8' pyproject.toml requirements.txt 2>/dev/null; } && lint_cmd="flake8"
+  fi
   [ -z "$project_name" ] && project_name="$(basename "$ROOT")"
 fi
 
@@ -90,33 +107,30 @@ fi
 [ -f go.mod ] && { add languages "go"; [ -z "$test_runner" ] && test_runner="go test"; }
 [ -f Cargo.toml ] && { add languages "rust"; [ -z "$test_runner" ] && test_runner="cargo test"; }
 
-# --- L3: monorepo topology + per-subtree fallback ---
+# --- L3: monorepo topology + per-subtree detection (polyglot-aware) ---
+# Always scan subtrees so a polyglot repo (e.g. python root + node subdir) is not
+# mislabelled by its root language alone. Excludes the root's own manifests.
 members=""
+while IFS= read -r m; do
+  d="$(dirname "$m")"; add members "${d#./}"
+done < <(find . -maxdepth 3 \
+          \( -name node_modules -o -name .git -o -name dist -o -name build -o -name .venv \
+             -o -name .next -o -name coverage -o -name .turbo -o -name out \) -prune -o \
+          \( -name package.json -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml \) -print 2>/dev/null \
+          | grep -vE '^\./(package\.json|pyproject\.toml|go\.mod|Cargo\.toml)$' | head -20)
 if [ -f pnpm-workspace.yaml ] || [ -f turbo.json ] || [ -f lerna.json ] \
-   || ( [ -d apps ] && [ -d packages ] ) \
-   || grep -qs '"workspaces"' package.json 2>/dev/null; then
+   || grep -qs '"workspaces"' package.json 2>/dev/null || [ -n "$members" ]; then
   monorepo="true"
-fi
-# L3: when the root has no manifest, the real projects live in subtrees — scan one
-# level (and apps/*, packages/*) so a polyglot monorepo isn't mislabelled as empty.
-if [ -z "$languages" ]; then
-  while IFS= read -r m; do
-    d="$(dirname "$m")"; add members "${d#./}"
-  done < <(find . -maxdepth 3 \
-            \( -name node_modules -o -name .git -o -name dist -o -name build \
-               -o -name .next -o -name coverage -o -name .turbo -o -name out \) -prune -o \
-            \( -name package.json -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml \) -print 2>/dev/null \
-            | grep -v '^./package.json$' | head -20)
-  [ -n "$members" ] && monorepo="true"
 fi
 
 [ -z "$project_name" ] && project_name="$(basename "$ROOT")"
 
 # --- emit ---
 python3 - "$project_name" "$languages" "$frameworks" "$test_runner" "$test_cmd" \
-  "$build_cmd" "$dev_cmd" "$pkg_manager" "$monorepo" "$data_layer" "$members" "$INSTALLED" "$ROOT" <<'PY'
+  "$typecheck_cmd" "$lint_cmd" "$build_cmd" "$dev_cmd" "$pkg_manager" "$monorepo" \
+  "$data_layer" "$members" "$INSTALLED" "$ROOT" <<'PY'
 import json,sys
-k=["project_name","languages","frameworks","test_runner","test_cmd","build_cmd","dev_cmd","package_manager","monorepo","data_layer","members","installed","root"]
+k=["project_name","languages","frameworks","test_runner","test_cmd","typecheck_cmd","lint_cmd","build_cmd","dev_cmd","package_manager","monorepo","data_layer","members","installed","root"]
 v=sys.argv[1:]
 lists=("languages","frameworks","data_layer","members")
 o={key:(val.split(",") if key in lists and val else ([] if key in lists else (val=="true" if key=="monorepo" else val))) for key,val in zip(k,v)}
