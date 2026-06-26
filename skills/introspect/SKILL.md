@@ -72,12 +72,15 @@ directly.
 - **Tier 1 — always.** The CLAUDE.md §0 spine + the generic critics from the
   plugin. Every repo gets this.
 - **Tier 2 — conditional, you generate it:**
-  - any compiled/typed language or framework → a `<stack>-architect` agent.
-  - frontend framework (React/Next/Vue) → note the UI skills the plugin provides
-    apply (`react-best-practices`, `ui-iterate`, `visual-regression`); add a
-    `ui-verify`-style note to the spine.
-  - data layer present → add a "verify data shape against the real store before
-    a data-touching change" line to §0.2 and recommend the `db-verify` agent.
+  - any compiled/typed language or framework → a `<stack>-architect` agent (§4.2).
+  - **frontend framework** (React / Next / Vue / Svelte) → generate a `ui-verify`
+    critic (§4.3) tailored to the dev command + framework, and list it in the spine
+    `## Critics`. It needs a browser driver, which the kit does NOT bundle — surface
+    the setup as guidance in §5, never copy a tool in.
+  - **data layer present** (mongodb / postgres / redis / …) → generate a `db-verify`
+    critic (§4.3) tailored to the detected store, and list it in the spine
+    `## Critics`. It needs the store's client, which the kit does NOT bundle —
+    surface the setup as guidance in §5.
   - monorepo → one sub-context `CLAUDE.md` stub per app/package, plus a note that
     sub-context CLAUDE.md wins on conflict.
 - **Tier 3 — opt-in only.** The self-evolving measurement + memory hooks are NOT
@@ -134,6 +137,12 @@ Record the answer; it drives the `worktree_workflow` flag and the
      `` - **Worktrees.** Each code-change task gets its own worktree via ``
      `` `/harness-kit:worktree <slug>` (`../<repo>-<slug>`); the main checkout stays read-only for edits. ``
      If **no**, leave it empty (remove the placeholder line entirely).
+   - `{{CONDITIONAL_CRITICS}}` — the stack-conditional critics you generated THIS
+     run (§4.3): a `db-verify` row if the data layer was present, a `ui-verify` row
+     if a frontend framework was present. Generated neither → remove the placeholder
+     line entirely. Format each like the static critic rows, e.g.:
+     `` - `db-verify` — is a data claim true against the real {{STORE}} store? — before a data-touching change. ``
+     `` - `ui-verify` — does the UI actually render and work? — after a frontend change. ``
 
 2. **`.claude/agents/<stack>-architect.md`** — one per primary stack, from
    `templates/agents/stack-architect.md`. Fill `{{STACK}}`, `{{FRAMEWORKS}}`,
@@ -141,7 +150,32 @@ Record the answer; it drives the `worktree_workflow` flag and the
    `{{TEST_MANDATE}}` ("Write the failing test first." for backend/library;
    "Add/extend tests for the change." for frontend).
 
-3. **`.claude/harness-kit.json`** — the single per-repo config both plugin hooks
+3. **`.claude/agents/db-verify.md` and/or `.claude/agents/ui-verify.md`** — the
+   stack-conditional critics, generated ONLY when the matching signal is present.
+   Templated like the architect (the eight static critics stay in the plugin; these
+   are generated because their commands are stack-specific).
+   - **data layer detected** → from `templates/agents/db-verify.md`. Fill
+     `{{PROJECT_NAME}}`, `{{STORE}}` (the human name), and `{{STORE_VERIFY_HOWTO}}`:
+
+     | Detected store | `{{STORE}}` | `{{STORE_VERIFY_HOWTO}}` |
+     |---|---|---|
+     | mongodb / mongoose / motor | MongoDB | Count with `$exists`: `db.<coll>.countDocuments({ <field>: { $exists: true } })` vs total; sample with `db.<coll>.find({}, { <field>: 1 }).limit(10)`; check the type of sampled values. Use `mongosh` or the repo's driver. |
+     | postgres / pg / prisma / drizzle / sqlalchemy | PostgreSQL | Confirm the column in `information_schema.columns`; count population with `SELECT count(*) FILTER (WHERE <col> IS NOT NULL), count(*) FROM <table>;`; read the declared type from `information_schema.columns.data_type`. Use `psql` or the repo's client. |
+     | redis / ioredis | Redis | Confirm a key/field with `EXISTS` / `HEXISTS`; check `TYPE <key>`; sample with a scoped `SCAN` (never `KEYS *` on a shared instance). Use `redis-cli`. |
+
+     For any other store, fill the generic equivalent (existence + population + type
+     against the real store) and name the client to install.
+   - **frontend framework detected** → from `templates/agents/ui-verify.md`. Fill
+     `{{PROJECT_NAME}}`, `{{FRAMEWORK}}`, `{{DEV_COMMAND}}` (the repo's real dev
+     command), and `{{E2E_NOTE}}`:
+     - repo has `@playwright/test` → "Drive the browser with the repo's Playwright (`npx playwright …`)."
+     - repo has Cypress → "Drive with the repo's Cypress."
+     - neither → "If the Playwright MCP is connected, use its `browser_*` tools;
+       otherwise open `{{DEV_COMMAND}}` and capture a real-browser screenshot of the
+       flow." (Surface the browser-driver setup in §5 — the kit bundles none.)
+   - List each generated critic in the spine `{{CONDITIONAL_CRITICS}}` slot (step 1).
+
+4. **`.claude/harness-kit.json`** — the single per-repo config both plugin hooks
    read (precedence for the hooks: env override > this file > built-in default).
    ```json
    {
@@ -169,7 +203,7 @@ Record the answer; it drives the `worktree_workflow` flag and the
      pr-shepherd reports state + "you decide" rather than fabricating MERGEABLE).
      Omit the whole block if there's no PR host (a local-only repo).
 
-4. **Scaffolding** (only if absent): ensure `scratch/` is gitignored (append it
+5. **Scaffolding** (only if absent): ensure `scratch/` is gitignored (append it
    to `.gitignore`); create `<target>/specs/.gitkeep` and
    `<target>/docs/adr/0000-record-architecture-decisions.md` (a one-paragraph ADR
    starter). The `/harness-kit:new-spec` and `/harness-kit:adr` skills (from the
@@ -187,5 +221,11 @@ Print a BLUF summary:
 - **Generated**: every file written, with its path.
 - **From the plugin (not duplicated)**: the generic agents/skills/hooks now
   active in this repo.
+- **External setup you may need** (the kit does NOT bundle or copy these — it
+  tells you how to add them, you install them): if you generated `ui-verify`, the
+  browser driver it needs (the Playwright MCP — `claude mcp add playwright …` — or a
+  repo e2e tool); if you generated `db-verify`, the store's client CLI / driver
+  (`mongosh` / `psql` / `redis-cli`). List only what's actually missing, with the
+  one command to add it. Never silently embed an external tool / skill in the repo.
 - **Refine**: 2–3 concrete next edits the user may want (e.g. "fill the
   Architecture note", "enable Tier-3 measurement with `--enable-measurement`").

@@ -7,6 +7,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Stack-conditional critics** — `introspect` now generates a `db-verify` critic
+  **only when a data layer is detected** (tailored to the real store: MongoDB
+  `$exists` counts / Postgres `information_schema` / Redis) and a `ui-verify` critic
+  **only when a frontend framework is detected** (tailored to the real dev command).
+  Generated like the architect (not shipped static) because their commands are
+  stack-specific — the introspect-first thesis applied to verification. The kit does
+  **not** bundle the DB client or browser driver these need; introspect surfaces the
+  one command to add them as guidance (§5 "External setup you may need") and never
+  copies an external tool into the repo. New spine slot `{{CONDITIONAL_CRITICS}}`;
+  replaces the old dead references to non-existent UI skills. +20 tests (→ 69).
 - **Build-discipline layer** — `/harness-kit:tdd` + the `tdd-runner` agent
   (red → green → refactor, test-first), `/harness-kit:diagnose` (reproduce →
   minimize → hypothesize → fix the cause → regression-test),

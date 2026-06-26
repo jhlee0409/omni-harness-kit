@@ -75,6 +75,7 @@ task invents gaps.
 - `readability-critic` — can a human decide from this output? — before shipping a human-facing surface.
 - `pr-shepherd` — is the PR mergeable? (CI + bot triage) — after opening / updating a PR.
 - `architecture-reviewer` — is a structural change sound? (layers / smells / invariants) — after a refactor.
+{{CONDITIONAL_CRITICS}}
 
 ## Architecture
 {{ARCHITECTURE_NOTE}}
