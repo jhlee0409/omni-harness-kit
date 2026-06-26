@@ -27,6 +27,11 @@ First public release.
   <title>` records the next numbered ADR (`docs/adr/NNNN-*.md`). The generated
   spine gains a `## Workflow` section (spec discipline / ADR / scratch). Reliable
   output comes from this structured discipline, not a measurement system.
+- `worktree` skill + **ask-gated** workflow — introspect now ASKS (via
+  AskUserQuestion) whether the repo wants a worktree-per-task workflow; if yes the
+  spine gets a worktree rule and `.claude/harness-kit.json` records
+  `worktree_workflow: true`. `/harness-kit:worktree <slug>` creates
+  `../<repo>-<slug>` on its own branch. Opinionated choices are asked, not assumed.
 - `change-verifier` read-only critic agent.
 - `protected-branch-guard` PreToolUse hook (asks before commit/push on a protected
   branch). Branches are configurable per repo via `.claude/harness-kit.json`

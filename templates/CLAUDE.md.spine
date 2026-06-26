@@ -45,6 +45,7 @@ it and stop before exceeding it.
   `/harness-kit:adr <title>` → `docs/adr/NNNN-*.md`.
 - **Scratch.** Temp / working files go in a gitignored `scratch/` (or `/tmp`),
   never the repo root.
+{{WORKTREE_RULE}}
 
 ## Agents — the main agent delegates here automatically (no need to name them)
 {{AGENT_ROUTING}}
