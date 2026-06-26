@@ -40,6 +40,13 @@ echo "[4] introspect store-table covers every store detect.sh surfaces"
 for store in mongodb postgres mysql sqlite redis; do
   grep -q "\b$store\b" "$SKILL" && ok "SKILL store-table mentions $store" || no "SKILL missing $store mapping"
 done
+# M3B idiom coverage — each store row must carry its SIGNATURE verify idiom, so a row
+# can't silently degrade to a wrong/empty howto (e.g. Postgres FILTER on MySQL = error).
+grep -qF '$exists' "$SKILL"          && ok "mongodb idiom (\$exists)"           || no "mongodb howto missing \$exists"
+grep -q  'information_schema' "$SKILL" && ok "postgres idiom (information_schema)" || no "postgres howto missing information_schema"
+grep -qF 'NO `FILTER' "$SKILL"        && ok "mysql idiom (no-FILTER warning)"    || no "mysql howto missing the no-FILTER warning"
+grep -q  'PRAGMA table_info' "$SKILL"  && ok "sqlite idiom (PRAGMA table_info)"   || no "sqlite howto missing PRAGMA"
+grep -q  'HEXISTS' "$SKILL"            && ok "redis idiom (HEXISTS)"             || no "redis howto missing HEXISTS"
 has "$SKILL" 'templates/agents/db-verify.md' && ok "SKILL generates from db-verify template" || no "SKILL not wired to db-verify template"
 has "$SKILL" 'templates/agents/ui-verify.md' && ok "SKILL generates from ui-verify template" || no "SKILL not wired to ui-verify template"
 

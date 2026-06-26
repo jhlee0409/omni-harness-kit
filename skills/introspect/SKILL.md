@@ -202,10 +202,13 @@ Record the answer; it drives the `worktree_workflow` flag and the
      "pr_workflow": { "host": "github", "ci": "github-actions", "merge_gate": null }
    }
    ```
-   - `verify_command` — the detected fast check (prefer `typecheck_cmd && test_cmd`,
-     else whichever exists: `"tsc --noEmit && vitest run"`, `"mypy . && pytest"`,
-     `"pytest"`). The verify-loop Stop hook surfaces it when code changed. Omit if
-     no check was detected.
+   - `verify_command` — the detected fast check. Join with `&&` ONLY the checks that
+     are non-empty (C2 dogfood fix: a missing typecheck must not leave a dangling
+     `tsc --noEmit && ` or a leading `&& test`); a single check stands alone. E.g.
+     `"tsc --noEmit && vitest run"`, `"mypy . && pytest"`, just `"go test ./..."`, or
+     `"cargo test"`. The command runs inside the repo (deps installed), so a
+     workspace-local bin like `vitest` resolves. The verify-loop Stop hook surfaces it
+     when code changed. Omit the key entirely if no check was detected.
    - `blocking` — leave `false` (reminds, non-intrusive); the user flips it to enforce.
    - `protected_branches` — seed from the repo's real long-lived branches; the
      protected-branch guard asks before commit/push on these.

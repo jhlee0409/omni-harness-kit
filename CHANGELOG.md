@@ -6,6 +6,29 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-06-26
+
+Test-hardening — deterministic guards for the contract around the (probabilistic)
+generation step. No product behavior change beyond one generation-guidance fix.
+
+### Added
+- **Generation-contract tests** (`tests/generation_contract_test.sh`): **referential
+  integrity** — every critic / `tdd-runner` / `/harness-kit:<skill>` the spine routes
+  to must resolve to a real file (catches rename/delete drift, which this kit's
+  deletion-bias invites); **slot contract** — every `{{SLOT}}` in the generated
+  templates must be documented as fillable in the SKILL (catches a slot that would
+  render literally, incl. digit slots like `{{E2E_NOTE}}`).
+- **Store idiom coverage** — `conditional_critics_test` now asserts each store row
+  carries its signature verify idiom (`$exists` / `information_schema` / the MySQL
+  no-`FILTER` warning / `PRAGMA table_info` / `HEXISTS`), so a row can't silently
+  degrade to a wrong/empty howto.
+- +40 tests (→ 123).
+
+### Changed
+- **`verify_command` join (C2 dogfood fix)** — `SKILL.md §4.4` now says to join with
+  `&&` only the non-empty checks (no dangling `tsc --noEmit && `) and notes the hook
+  runs inside the repo so a workspace-local bin resolves.
+
 ## [0.3.3] - 2026-06-26
 
 Maturation from a dogfood pass — `introspect` was run against real public repos
@@ -181,6 +204,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.3.4]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.4
 [0.3.3]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.3
 [0.3.2]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.2
 [0.3.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.1
