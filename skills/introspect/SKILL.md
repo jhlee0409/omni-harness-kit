@@ -119,20 +119,14 @@ Record the answer; it drives the `worktree_workflow` flag and the
    - `{{ENTRY_POINTS}}` — the real dev / build / test commands from detect.sh.
    - `{{TEST_DISCIPLINE}}` — the runner + command + a "tests-first for non-trivial
      changes" line (mandatory-TDD wording for backend/library code).
-   - `{{AGENT_ROUTING}}` — an explicit routing list so the main agent delegates
-     without being told to. One line per agent it can use, each with a *when*.
-     This is what turns "auto-orchestration" from description-matching luck into
-     explicit guidance. **List ONLY agents that actually exist**: the
-     `<stack>-architect`(s) you generated THIS run + the plugin's `change-verifier`
-     and `claim-checker`.
-     Do NOT name an agent that is not installed or generated (there is no
-     `db-verify` agent — don't invent one). A detected concern with no agent
-     (a database, an external API) becomes a `§0.2` verify rule, not a routing
-     entry. Example:
+   - `{{AGENT_ROUTING}}` — list the `<stack>-architect`(s) you generated THIS run,
+     each with a *when*, so the main agent delegates architecture work without
+     being told. **List ONLY architects that exist** — don't invent agents; a
+     detected concern with no agent (a database) becomes a `§0.2` verify rule. The
+     verification critics are already in the static `## Critics` section — do NOT
+     duplicate them here. Example:
      ```
      - `typescript-architect` — structural / refactoring / deepening architecture work.
-     - `change-verifier` — before reporting any change "done" (callsites, wiring, tests, real-run).
-     - `claim-checker` — before a high-stakes terminal/analytical claim (limit / sufficient / fully-solves).
      ```
    - `{{ARCHITECTURE_NOTE}}` — name the `<stack>-architect` agent(s) you created
      and, for a monorepo, the sub-context map.

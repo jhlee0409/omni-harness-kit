@@ -17,8 +17,9 @@ ask + your plan before the first tool call. Self-check: ① ambiguity ② scope
 ③ is this the real problem. A failing core → stop and confirm.
 
 **0.1 Skill first, then delegate.** If a skill matches the request, invoke it
-before editing / Bash / git. For architecture or verification work, delegate to
-the matching agent in `## Agents` below — you don't need to be told to.
+before editing / Bash / git. For architecture work delegate to the matching agent
+in `## Agents`; for verification delegate to the matching critic in `## Critics` —
+you don't need to be told to.
 
 **0.2 Verify before claiming.** Data and state claims = a real query or grep,
 never inferred from code. Repo / PR state = real `gh` / `git`, never assumed.
@@ -58,6 +59,18 @@ conclusion. For a high-stakes conclusion the user will act on, delegate to
 
 ## Agents — the main agent delegates here automatically (no need to name them)
 {{AGENT_ROUTING}}
+
+## Critics — independent checks, routed on demand by your phrasing
+The harness-kit plugin ships these read-only critics; the main agent delegates to
+one when the request matches. On demand, NOT by default — a critic run on every
+task invents gaps.
+- `instruction-critic` — is this the right ask? (ambiguity / scope / real problem) — before non-trivial work.
+- `requirement-fidelity-critic` — does the spec/design still match the original ask? (drift) — after a spec.
+- `change-verifier` — is the change actually complete? (callsites / wiring / tests / real run) — before "done".
+- `claim-checker` — is a terminal claim measured or asserted? — before "limit / sufficient / fully-solves".
+- `spec-reviewer` — did the PR deliver its spec's scope? — at PR time (no-ops if no spec).
+- `readability-critic` — can a human decide from this output? — before shipping a human-facing surface.
+- `pr-shepherd` — is the PR mergeable? (CI + bot triage) — after opening / updating a PR.
 
 ## Architecture
 {{ARCHITECTURE_NOTE}}
