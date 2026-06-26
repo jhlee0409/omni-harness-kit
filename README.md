@@ -103,8 +103,27 @@ Quick env toggles: `HARNESS_GUARD_OFF=1`, `HARNESS_VERIFY_OFF=1`,
 Re-running `introspect` is safe — it replaces its own marked block in `CLAUDE.md`
 (via `update-block.sh`) instead of stacking copies.
 
+## Requirements
+
+`bash` + `python3` (the detection engine and the hooks); `git` for the guard hook.
+Node/npm only when the target stack is Node (auto-detected, not a hard dependency).
+macOS and Linux are supported; on Windows use WSL or Git-Bash. Without `python3` the
+hooks **fail open silently** — they never block your work, but the guard you expect
+is simply absent.
+
 ## Status
 
-Early PoC. Validated end-to-end against TypeScript/MCP and Python/Gradio repos.
-69 tests across detection, hooks, skill scaffolders, and the conditional critics.
+Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
+
+- **Detection + the deterministic engine** (`detect.sh`, the two hooks, the
+  scaffolders, the template contracts) is covered by **71 tests**, and `introspect`
+  has been run end-to-end on TypeScript/MCP and Python/Gradio repos.
+- **Harness generation is LLM-driven** from those tested templates — it is
+  *probabilistic, not guaranteed*: a mis-filled slot is not caught by a test. Only
+  TS + Python are generation-validated end-to-end; Go / Rust / monorepo-per-member /
+  the Python-DB path are detection-verified only (the first user on those is the
+  integration test).
+- The generated `db-verify` / `ui-verify` critics are template- and signal-tested,
+  not yet generated-and-run in CI.
+
 License: MIT.

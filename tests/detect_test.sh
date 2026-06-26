@@ -104,6 +104,17 @@ check "$j" "['languages']" "python" "root python detected"
 check "$j" "['monorepo']" "true" "polyglot flagged monorepo"
 check "$j" "['members']" "frontend" "node subtree surfaced as member"
 
+echo "[8] security: a command-substitution in a member dir name must NOT execute (no-eval add)"
+f="$TMP/evil"; mkdir -p "$f/m\$(touch $TMP/RCE_MARKER)x"
+: > "$f/m\$(touch $TMP/RCE_MARKER)x/package.json"
+rm -f "$TMP/RCE_MARKER"
+bash "$DETECT" "$f" >/dev/null 2>&1
+if [ -e "$TMP/RCE_MARKER" ]; then
+  echo "  FAIL: RCE — detect.sh executed a dir-name command substitution"; FAIL=$((FAIL+1))
+else
+  echo "  PASS: no RCE — crafted member dir name treated as inert data"; PASS=$((PASS+1))
+fi
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

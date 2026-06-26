@@ -24,7 +24,15 @@ languages=""; frameworks=""; test_runner=""; test_cmd=""; build_cmd=""; dev_cmd=
 pkg_manager=""; monorepo="false"; data_layer=""; project_name=""
 typecheck_cmd=""; lint_cmd=""
 
-add() { local var="$1" val="$2"; [ -n "$val" ] && eval "$var=\"\${$var:+\$$var,}$val\""; }
+# Append $val to the comma-list named by $var. NO eval — $val is attacker-controlled
+# (it carries directory names from `find` on an untrusted target repo). printf '%s'
+# stores it as inert data; an eval here would run `$(...)` in a crafted dir name (RCE).
+add() {
+  local var="$1" val="$2"
+  [ -n "$val" ] || return 0
+  local cur="${!var}"
+  printf -v "$var" '%s' "${cur:+$cur,}$val"
+}
 
 # --- L1+L2: Node — declaration layer (package.json + lockfile + config files) ---
 if [ -f package.json ]; then

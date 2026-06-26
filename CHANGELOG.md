@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.1] - 2026-06-26
+
+A security + honesty patch from an adversarial OSS-readiness audit.
+
+### Security
+- **Critical RCE in `detect.sh` fixed.** The `add()` helper used `eval` to build its
+  comma-lists; the `members` list is fed attacker-controlled directory names from a
+  scanned (untrusted) target repo, so a crafted dir name like
+  `a$(…)b/package.json` executed arbitrary shell when `introspect` scanned the repo —
+  a drive-by RCE in a tool whose whole job is scanning untrusted repos. Replaced
+  `eval` with a `printf -v` / `${!var}` form that stores values as inert data (no
+  re-evaluation), portable to bash 3.2. Added a regression test (`detect_test.sh` [8])
+  that feeds a `$(touch MARKER)`-named member dir and asserts nothing executes.
+
+### Changed
+- **Honest status / caveats** (the audit flagged overclaim): README now states that
+  harness *generation* is LLM-driven and probabilistic (only *detection* is e2e-
+  validated), that only TS + Python are generation-validated end-to-end, and adds a
+  Requirements section (bash + python3; Windows via WSL; hooks fail open without
+  python3). Test count corrected to 71.
+
 ## [0.3.0] - 2026-06-26
 
 The introspect-first thesis extended to verification + build discipline, plus a
@@ -112,6 +135,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.3.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.1
 [0.3.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.1.0
