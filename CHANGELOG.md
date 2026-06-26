@@ -32,6 +32,14 @@ First public release.
   spine gets a worktree rule and `.claude/harness-kit.json` records
   `worktree_workflow: true`. `/harness-kit:worktree <slug>` creates
   `../<repo>-<slug>` on its own branch. Opinionated choices are asked, not assumed.
+- `handoff` + `pickup` resume loop — `/harness-kit:handoff` writes a resume block
+  (original ask, phase, next command, in-flight decisions, don't-redo) at a
+  stopping point; `/harness-kit:pickup` continues from it in a fresh session.
+  Shipped only after a **discriminating validation**: across 3 trials a fresh
+  session that read the handoff respected a non-obvious decision (skip one of
+  three near-identical code paths) and used the right naming, while a no-handoff
+  control fell into the consistency trap 3/3 — proving the block transfers context
+  the repo alone does not reveal.
 - `change-verifier` read-only critic agent.
 - `protected-branch-guard` PreToolUse hook (asks before commit/push on a protected
   branch). Branches are configurable per repo via `.claude/harness-kit.json`

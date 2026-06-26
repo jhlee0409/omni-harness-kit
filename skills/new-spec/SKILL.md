@@ -26,6 +26,5 @@ measurement system).
 3. **Fill, in order:** `spec.md` (the original ask verbatim + acceptance),
    `plan.md` (dependency-ordered tasks), then load the tasks and surface **N/M**
    as you work. A "done" tone before all plan tasks are consumed is not allowed.
-4. **`context.md` `## 0. Resume here`** is written by hand at a stopping point so
-   a fresh session can resume (the handoff/pickup automation is not shipped yet —
-   its accuracy is still being validated).
+4. **`context.md` `## 0. Resume here`** — write it with `/harness-kit:handoff` at
+   a stopping point; a fresh session resumes from it with `/harness-kit:pickup`.
