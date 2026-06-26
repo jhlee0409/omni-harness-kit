@@ -6,6 +6,38 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-26
+
+Maturation from a dogfood pass — `introspect` was run against real public repos
+across the unvalidated matrix (Go/Rust/monorepo/Python+DB/frontend); the kit's
+judgment held everywhere and the plumbing defects it surfaced are fixed. See
+[`docs/dogfood-log.md`](docs/dogfood-log.md).
+
+### Fixed
+- **Go / Rust / Python verify commands** — these branches set a test *runner* but no
+  runnable command, so the verify-loop hook silently no-op'd on those ecosystems. Now
+  `go test ./...` / `cargo test` / `pytest` (+ build/typecheck/lint defaults) are
+  emitted, lighting up the verify loop. (D1)
+- **`project_name` for Go/Rust** — now read from the Go module path / Cargo
+  `[package].name`, not the clone-dir basename (`# CLAUDE.md — go` → `cobra`). (D6)
+- **Prisma datasource** — was hardcoded to Postgres, so a MySQL/SQLite repo got a
+  `db-verify` with Postgres-only `FILTER(WHERE)` queries that *error*. `detect.sh` now
+  reads `schema.prisma` `provider`; the SKILL store table gained MySQL + SQLite rows. (D4)
+- **Monorepo member detection (REL-5)** — `requirements.txt` / `setup.py` / `setup.cfg`
+  are now member markers, so Python sub-packages are no longer invisible. (D3)
+- **Duplicate members** — a dir with two manifests is now listed once. (D7)
+- **Python package manager** — `uv.lock` / `poetry.lock` / `Pipfile.lock` detected. (C3)
+
+### Changed
+- **Empty-slot rendering** — `SKILL.md §4.2` now instructs the generator to omit empty
+  slots (no empty `()` / inline-code / dangling `Build:` lines) and gives a
+  no-test-runner fallback, so a frameworkless Go/Rust harness renders cleanly. (D2)
+- README Status narrowed to the dogfood evidence; +12 tests (→ 83).
+
+### Known limitations (0.x)
+- Cargo `[workspace]` `members`/`exclude` not parsed (find-based member scan can
+  include an excluded crate or miss a no-manifest binary crate) — tracked. (D5)
+
 ## [0.3.2] - 2026-06-26
 
 ### Changed
@@ -149,6 +181,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.3.3]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.3
 [0.3.2]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.2
 [0.3.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.1
 [0.3.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.0

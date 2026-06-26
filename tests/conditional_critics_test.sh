@@ -37,7 +37,7 @@ echo "[3] spine exposes the conditional-critics slot"
 has "$SPINE" '{{CONDITIONAL_CRITICS}}' && ok "spine has {{CONDITIONAL_CRITICS}}" || no "spine missing slot"
 
 echo "[4] introspect store-table covers every store detect.sh surfaces"
-for store in mongodb postgres redis; do
+for store in mongodb postgres mysql sqlite redis; do
   grep -q "\b$store\b" "$SKILL" && ok "SKILL store-table mentions $store" || no "SKILL missing $store mapping"
 done
 has "$SKILL" 'templates/agents/db-verify.md' && ok "SKILL generates from db-verify template" || no "SKILL not wired to db-verify template"

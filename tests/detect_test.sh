@@ -115,6 +115,42 @@ else
   echo "  PASS: no RCE — crafted member dir name treated as inert data"; PASS=$((PASS+1))
 fi
 
+echo "[9] Go (dogfood D1/D6): runnable verify cmds + name from module path, not dir basename"
+f="$TMP/go"; mkdir -p "$f"
+printf 'module github.com/spf13/cobra\n\ngo 1.21\n' > "$f/go.mod"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['project_name']" "cobra" "Go name from module path (not dir 'go')"
+check "$j" "['test_cmd']" "go test ./..." "Go test_cmd runnable"
+check "$j" "['typecheck_cmd']" "go vet" "Go typecheck filled"
+check "$j" "['build_cmd']" "go build ./..." "Go build_cmd filled"
+
+echo "[10] Rust (dogfood D1/D6): cargo verify cmds + name from [package].name"
+f="$TMP/rs"; mkdir -p "$f"
+printf '[package]\nname = "ripgrep"\nversion = "1.0.0"\n' > "$f/Cargo.toml"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['project_name']" "ripgrep" "Rust name from [package].name (not dir 'rs')"
+check "$j" "['test_cmd']" "cargo test" "Rust test_cmd runnable"
+check "$j" "['lint_cmd']" "cargo clippy" "Rust lint_cmd filled"
+
+echo "[11] Prisma datasource provider (dogfood D4): MySQL must NOT map to postgres"
+f="$TMP/pm"; mkdir -p "$f/prisma"
+printf '{"name":"app","dependencies":{"@prisma/client":"^5","prisma":"^5"}}' > "$f/package.json"
+printf 'datasource db {\n  provider = "mysql"\n}\ngenerator client {\n  provider = "prisma-client-js"\n}\n' > "$f/prisma/schema.prisma"
+: > "$f/package-lock.json"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['data_layer']" "mysql" "Prisma mysql provider → mysql (not postgres; generator ignored)"
+
+echo "[12] monorepo members (dogfood D3 REL-5 + D7 dedup)"
+f="$TMP/mono"; mkdir -p "$f/svc" "$f/worker"
+printf '{"name":"root"}' > "$f/package.json"
+printf '{"name":"svc"}' > "$f/svc/package.json"
+printf '[project]\nname="svc"\n' > "$f/svc/pyproject.toml"
+printf 'flask\n' > "$f/worker/requirements.txt"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['members']" "worker" "requirements.txt-only sub-package surfaced as member (REL-5)"
+dupcount="$(printf '%s' "$j" | python3 -c "import json,sys;m=json.load(sys.stdin)['members'];print(m.count('svc'))")"
+[ "$dupcount" = "1" ] && { echo "  PASS: dir with 2 manifests listed once (D7 dedup)"; PASS=$((PASS+1)); } || { echo "  FAIL: svc listed $dupcount times (dup-member bug)"; FAIL=$((FAIL+1)); }
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

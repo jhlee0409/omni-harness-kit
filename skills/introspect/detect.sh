@@ -75,8 +75,21 @@ PY
   [ -z "$test_runner" ] && { [ -f jest.config.js ] && test_runner="jest"; }
   # Data layer.
   case " $deps " in *" mongodb "*|*" mongoose "*) add data_layer "mongodb" ;; esac
-  case " $deps " in *" pg "*|*" prisma "*|*" drizzle-orm "*) add data_layer "postgres" ;; esac
+  case " $deps " in *" pg "*|*" drizzle-orm "*) add data_layer "postgres" ;; esac
   case " $deps " in *" redis "*|*" ioredis "*) add data_layer "redis" ;; esac
+  # Prisma: read the datasource provider — do NOT assume postgres (D4 dogfood fix:
+  # a MySQL/SQLite repo was getting Postgres-only db-verify queries that error).
+  case " $deps " in
+    *" prisma "*|*" @prisma/client "*)
+      prov="$(grep -hoiE '"(mysql|postgresql|sqlite|mongodb|sqlserver)"' prisma/schema.prisma 2>/dev/null | tr -d '"' | tr '[:upper:]' '[:lower:]' | head -1)"
+      case "$prov" in
+        mysql)     add data_layer "mysql" ;;
+        sqlite)    add data_layer "sqlite" ;;
+        mongodb)   add data_layer "mongodb" ;;
+        sqlserver) add data_layer "sqlserver" ;;
+        *)         add data_layer "postgres" ;;
+      esac ;;
+  esac
   # Package manager — L1 lockfile precedence.
   if   [ -f pnpm-lock.yaml ]; then pkg_manager="pnpm"
   elif [ -f yarn.lock ];      then pkg_manager="yarn"
@@ -97,6 +110,8 @@ fi
 if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
   add languages "python"
   { [ -z "$test_runner" ] && grep -qsiE 'pytest' pyproject.toml requirements.txt setup.cfg 2>/dev/null; } && test_runner="pytest"
+  # A runnable command for the verify loop — the runner name itself (D1 dogfood fix).
+  { [ -z "$test_cmd" ] && [ "$test_runner" = "pytest" ]; } && test_cmd="pytest"
   grep -qsiE 'fastapi'   pyproject.toml requirements.txt 2>/dev/null && add frameworks "fastapi"
   grep -qsiE 'django'    pyproject.toml requirements.txt 2>/dev/null && add frameworks "django"
   grep -qsiE 'flask'     pyproject.toml requirements.txt 2>/dev/null && add frameworks "flask"
@@ -112,26 +127,55 @@ if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
     grep -qsiE 'ruff'   pyproject.toml requirements.txt 2>/dev/null && lint_cmd="ruff check ."
     { [ -z "$lint_cmd" ] && grep -qsiE 'flake8' pyproject.toml requirements.txt 2>/dev/null; } && lint_cmd="flake8"
   fi
+  # Package manager — lockfile precedence (parity with the Node ladder; C3 dogfood fix).
+  if [ -z "$pkg_manager" ]; then
+    if   [ -f uv.lock ];      then pkg_manager="uv"
+    elif [ -f poetry.lock ];  then pkg_manager="poetry"
+    elif [ -f Pipfile.lock ]; then pkg_manager="pipenv"
+    fi
+  fi
   [ -z "$project_name" ] && project_name="$(basename "$ROOT")"
 fi
 
-# --- Go / Rust ---
-[ -f go.mod ] && { add languages "go"; [ -z "$test_runner" ] && test_runner="go test"; }
-[ -f Cargo.toml ] && { add languages "rust"; [ -z "$test_runner" ] && test_runner="cargo test"; }
+# --- Go / Rust (D1: runnable verify commands; D6: name from the manifest, not the dir) ---
+if [ -f go.mod ]; then
+  add languages "go"
+  [ -z "$test_runner" ]   && test_runner="go test"
+  [ -z "$test_cmd" ]      && test_cmd="go test ./..."
+  [ -z "$typecheck_cmd" ] && typecheck_cmd="go vet ./..."
+  [ -z "$build_cmd" ]     && build_cmd="go build ./..."
+  { [ -z "$lint_cmd" ] && { [ -f .golangci.yml ] || [ -f .golangci.yaml ]; }; } && lint_cmd="golangci-lint run"
+  # project_name = last segment of the module path (e.g. github.com/spf13/cobra → cobra).
+  [ -z "$project_name" ] && project_name="$(awk '/^module /{print $2; exit}' go.mod 2>/dev/null | sed 's#.*/##')"
+fi
+if [ -f Cargo.toml ]; then
+  add languages "rust"
+  [ -z "$test_runner" ] && test_runner="cargo test"
+  [ -z "$test_cmd" ]    && test_cmd="cargo test"
+  [ -z "$build_cmd" ]   && build_cmd="cargo build"
+  [ -z "$lint_cmd" ]    && lint_cmd="cargo clippy"
+  # project_name from [package].name (a virtual workspace has none → falls back to basename).
+  [ -z "$project_name" ] && project_name="$(awk -F'"' '/^\[package\]/{p=1} p&&/^name[[:space:]]*=/{print $2; exit}' Cargo.toml 2>/dev/null)"
+fi
 
 # --- L3: monorepo topology — list member manifests (polyglot-aware) ---
 # Scan subtrees so a polyglot repo (e.g. python root + node subdir) is flagged as a
 # monorepo and its members listed. This only NAMES members; introspect re-runs this
 # detector against each member dir to detect its stack/data-layer (SKILL §3). Excludes
 # the root's own manifests.
+# D3 (REL-5): the member marker set must equal the root detector's (requirements.txt /
+# setup.py / setup.cfg were missing → Python sub-packages were invisible). D7: map each
+# manifest to its dir and `sort -u` so a dir with two manifests is not listed twice.
 members=""
-while IFS= read -r m; do
-  d="$(dirname "$m")"; add members "${d#./}"
+while IFS= read -r d; do
+  add members "$d"
 done < <(find . -maxdepth 3 \
           \( -name node_modules -o -name .git -o -name dist -o -name build -o -name .venv \
              -o -name .next -o -name coverage -o -name .turbo -o -name out \) -prune -o \
-          \( -name package.json -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml \) -print 2>/dev/null \
-          | grep -vE '^\./(package\.json|pyproject\.toml|go\.mod|Cargo\.toml)$' | head -20)
+          \( -name package.json -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml \
+             -o -name requirements.txt -o -name setup.py -o -name setup.cfg \) -print 2>/dev/null \
+          | grep -vE '^\./(package\.json|pyproject\.toml|go\.mod|Cargo\.toml|requirements\.txt|setup\.py|setup\.cfg)$' \
+          | sed 's#/[^/]*$##; s#^\./##' | sort -u | head -20)
 if [ -f pnpm-workspace.yaml ] || [ -f turbo.json ] || [ -f lerna.json ] \
    || grep -qs '"workspaces"' package.json 2>/dev/null || [ -n "$members" ]; then
   monorepo="true"

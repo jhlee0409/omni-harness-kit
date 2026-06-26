@@ -148,10 +148,19 @@ Record the answer; it drives the `worktree_workflow` flag and the
      `` - `ui-verify` — does the UI actually render and work? — after a frontend change. ``
 
 2. **`.claude/agents/<stack>-architect.md`** — one per primary stack, from
-   `templates/agents/stack-architect.md`. Fill `{{STACK}}`, `{{FRAMEWORKS}}`,
-   `{{LANGUAGE}}`, `{{TEST_RUNNER}}`, `{{TEST_COMMAND}}`, `{{BUILD_COMMAND}}`, and
-   `{{TEST_MANDATE}}` ("Write the failing test first." for backend/library;
-   "Add/extend tests for the change." for frontend).
+   `templates/agents/stack-architect.md`. Derive `{{STACK}}` from the primary
+   language and sanitize it for the agent `name:` — strip dots (`next.js` →
+   `nextjs-architect`). Fill `{{FRAMEWORKS}}`, `{{LANGUAGE}}`, `{{TEST_RUNNER}}`,
+   `{{TEST_COMMAND}}`, `{{BUILD_COMMAND}}`, and `{{TEST_MANDATE}}` ("Write the
+   failing test first." for backend/library; "Add/extend tests for the change."
+   for frontend).
+   - **Omit empty slots (D2 dogfood fix).** A detected value can be empty — a Go/Rust
+     repo has no framework, some repos have no test runner. NEVER render an empty
+     `()`, an empty `` `` `` inline-code span, or a dangling `Build:` / `Test runner:`
+     line: drop the whole line or parenthetical when its slot is empty (the same rule
+     as `{{WORKTREE_RULE}}` in step 1). When there is NO test runner at all, replace
+     the test lines with: "No test runner configured — verify behavior end-to-end
+     against the real app (§0.3); add a runner before claiming a change works."
 
 3. **`.claude/agents/db-verify.md` and/or `.claude/agents/ui-verify.md`** — the
    stack-conditional critics, generated ONLY when the matching signal is present.
@@ -163,11 +172,15 @@ Record the answer; it drives the `worktree_workflow` flag and the
      | Detected store | `{{STORE}}` | `{{STORE_VERIFY_HOWTO}}` |
      |---|---|---|
      | mongodb / mongoose / motor | MongoDB | Count with `$exists`: `db.<coll>.countDocuments({ <field>: { $exists: true } })` vs total; sample with `db.<coll>.find({}, { <field>: 1 }).limit(10)`; check the type of sampled values. Use `mongosh` or the repo's driver. |
-     | postgres / pg / prisma / drizzle / sqlalchemy | PostgreSQL | Confirm the column in `information_schema.columns`; count population with `SELECT count(*) FILTER (WHERE <col> IS NOT NULL), count(*) FROM <table>;`; read the declared type from `information_schema.columns.data_type`. Use `psql` or the repo's client. |
+     | postgres / pg / drizzle / sqlalchemy | PostgreSQL | Confirm the column in `information_schema.columns`; count population with `SELECT count(*) FILTER (WHERE <col> IS NOT NULL), count(*) FROM <table>;`; read the declared type from `information_schema.columns.data_type`. Use `psql` or the repo's client. |
+     | mysql | MySQL | Confirm the column in `information_schema.columns`; count population with `SELECT COUNT(*), SUM(<col> IS NOT NULL) FROM <table>;` (NO `FILTER (WHERE …)` — that is Postgres-only syntax and errors on MySQL); read the type from `information_schema.columns`. Use the `mysql` client. |
+     | sqlite | SQLite | Confirm the column via `PRAGMA table_info(<table>)`; count population with `SELECT count(*), count(<col>) FROM <table>;`; sample rows. Use `sqlite3 <db-file>`. |
      | redis / ioredis | Redis | Confirm a key/field with `EXISTS` / `HEXISTS`; check `TYPE <key>`; sample with a scoped `SCAN` (never `KEYS *` on a shared instance). Use `redis-cli`. |
 
-     For any other store, fill the generic equivalent (existence + population + type
-     against the real store) and name the client to install.
+     `prisma`/`@prisma/client` is mapped to its real datasource provider by
+     `detect.sh` (it reads `schema.prisma`), so use the row for that provider — do
+     NOT assume Postgres. For any other store, fill the generic equivalent
+     (existence + population + type against the real store) and name the client.
    - **frontend framework detected** → from `templates/agents/ui-verify.md`. Fill
      `{{PROJECT_NAME}}`, `{{FRAMEWORK}}`, `{{DEV_COMMAND}}` (the repo's real dev
      command), and `{{E2E_NOTE}}`:

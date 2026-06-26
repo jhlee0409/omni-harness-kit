@@ -116,15 +116,18 @@ is simply absent.
 Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
 
 - **Detection + the deterministic engine** (`detect.sh`, the two hooks, the
-  scaffolders, the template contracts) is covered by **71 tests**, and `introspect`
-  has been run end-to-end on TypeScript/MCP and Python/Gradio repos.
-- **Harness generation is LLM-driven** from those tested templates — it is
-  *probabilistic, not guaranteed*: a mis-filled slot is not caught by a test. Only
-  TS + Python are generation-validated end-to-end; Go / Rust / monorepo-per-member /
-  the Python-DB path are detection-verified only (the first user on those is the
-  integration test).
-- The generated `db-verify` / `ui-verify` critics are template- and signal-tested,
-  not yet generated-and-run in CI.
+  scaffolders, the template contracts) is covered by **83 tests**.
+- **`introspect` has been dogfooded against real public repos** across the matrix —
+  Go (`cobra`), Rust (`ripgrep`), a TS/JS monorepo (`create-t3-turbo`), Python+Postgres
+  + React monorepo (`full-stack-fastapi-template`), a Python library (`flask`), and a
+  Next.js + Prisma(MySQL) frontend (`taxonomy`). Conditional-critic gating, the
+  store-verify idioms, and reference integrity validated clean on every stack; the
+  plumbing defects it surfaced are fixed (see [`docs/dogfood-log.md`](docs/dogfood-log.md)).
+- **Harness generation is LLM-driven** from those tested templates — this is the one
+  *probabilistic, not guaranteed* step: detection is deterministic, but turning it into
+  a CLAUDE.md/agents is a model honoring the SKILL prompt, so **review the generated
+  harness before committing it.** The generated `db-verify` / `ui-verify` critics are
+  template- and signal-tested, not generated-and-run in CI.
 
 License: MIT.
 
