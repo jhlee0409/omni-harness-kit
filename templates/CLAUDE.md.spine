@@ -16,8 +16,9 @@ the installed **harness-kit** plugin; do not duplicate them here.
 ask + your plan before the first tool call. Self-check: ① ambiguity ② scope
 ③ is this the real problem. A failing core → stop and confirm.
 
-**0.1 Skill first.** If a skill matches the request, invoke it before
-editing / Bash / git.
+**0.1 Skill first, then delegate.** If a skill matches the request, invoke it
+before editing / Bash / git. For architecture or verification work, delegate to
+the matching agent in `## Agents` below — you don't need to be told to.
 
 **0.2 Verify before claiming.** Data and state claims = a real query or grep,
 never inferred from code. Repo / PR state = real `gh` / `git`, never assumed.
@@ -34,6 +35,9 @@ it and stop before exceeding it.
 
 ## Test discipline
 {{TEST_DISCIPLINE}}
+
+## Agents — the main agent delegates here automatically (no need to name them)
+{{AGENT_ROUTING}}
 
 ## Architecture
 {{ARCHITECTURE_NOTE}}

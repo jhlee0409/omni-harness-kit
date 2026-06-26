@@ -10,8 +10,9 @@ First public release.
 
 ### Added
 - `introspect` skill: scans a target repo's stack and generates a tailored harness
-  (root `CLAUDE.md` spine + stack `*-architect` agent + `.claude/harness-kit.json`
-  verify config + specs/ADR scaffolding).
+  (root `CLAUDE.md` spine — including an explicit `## Agents` routing block so the
+  main agent delegates to the right agent without being named — + stack `*-architect`
+  agent + `.claude/harness-kit.json` verify config + specs/ADR scaffolding).
 - `detect.sh` detection engine with a 23-case test suite — layered-precedence
   detection of language / framework / test-runner / package-manager / monorepo /
   data-layer, plus **typecheck/lint command** detection and **polyglot per-subtree**

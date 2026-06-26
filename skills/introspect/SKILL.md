@@ -105,6 +105,19 @@ directly.
    - `{{ENTRY_POINTS}}` — the real dev / build / test commands from detect.sh.
    - `{{TEST_DISCIPLINE}}` — the runner + command + a "tests-first for non-trivial
      changes" line (mandatory-TDD wording for backend/library code).
+   - `{{AGENT_ROUTING}}` — an explicit routing list so the main agent delegates
+     without being told to. One line per agent it can use, each with a *when*.
+     This is what turns "auto-orchestration" from description-matching luck into
+     explicit guidance. **List ONLY agents that actually exist**: the
+     `<stack>-architect`(s) you generated THIS run + the plugin's `change-verifier`.
+     Do NOT name an agent that is not installed or generated (there is no
+     `db-verify` agent — don't invent one). A detected concern with no agent
+     (a database, an external API) becomes a `§0.2` verify rule, not a routing
+     entry. Example:
+     ```
+     - `typescript-architect` — structural / refactoring / deepening architecture work.
+     - `change-verifier` — before reporting any change "done" (callsites, wiring, tests, real-run).
+     ```
    - `{{ARCHITECTURE_NOTE}}` — name the `<stack>-architect` agent(s) you created
      and, for a monorepo, the sub-context map.
 
