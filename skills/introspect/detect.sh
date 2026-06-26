@@ -4,7 +4,7 @@
 # detection lessons (see SKILL.md):
 #   L1 layered precedence — declared files beat content guessing.
 #   L2 detect at the declaration layer; READ configs statically, NEVER execute.
-#   L3 monorepo → flag workspaces; per-subtree detection avoids polyglot mislabel.
+#   L3 monorepo → flag workspaces + list members; introspect re-runs detect per member.
 #   L4 separate "what the repo declares" from "what is installed on the machine".
 #   L5 detect the DECLARED (meta-)framework; do not infer transitive libraries.
 # Dependency-light: bash + python3 (JSON parse only). Fail-soft: unknowns are "".
@@ -36,7 +36,7 @@ import json
 try: d=json.load(open("package.json"))
 except Exception: d={}
 s=d.get("scripts",{}) or {}
-f=[d.get("name",""), s.get("dev",s.get("start","")) or "-", s.get("build","-"), s.get("test","-"),
+f=[d.get("name",""), s.get("dev",s.get("start","")), s.get("build",""), s.get("test",""),
    s.get("typecheck",s.get("type-check","")), s.get("lint","")]
 print("\x1f".join((x or "").replace("\x1f"," ") for x in f))
 PY
@@ -94,6 +94,10 @@ if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
   grep -qsiE 'flask'     pyproject.toml requirements.txt 2>/dev/null && add frameworks "flask"
   grep -qsiE 'gradio'    pyproject.toml requirements.txt 2>/dev/null && add frameworks "gradio"
   grep -qsiE 'streamlit' pyproject.toml requirements.txt 2>/dev/null && add frameworks "streamlit"
+  # Data layer — declared DB client in deps (parity with the Node branch; drives db-verify).
+  grep -qsiE 'pymongo|motor|mongoengine|beanie' pyproject.toml requirements.txt 2>/dev/null && add data_layer "mongodb"
+  grep -qsiE 'psycopg|asyncpg|sqlalchemy|sqlmodel' pyproject.toml requirements.txt 2>/dev/null && add data_layer "postgres"
+  grep -qsiE 'redis' pyproject.toml requirements.txt 2>/dev/null && add data_layer "redis"
   # Fast checks for the verify loop.
   { [ -z "$typecheck_cmd" ] && grep -qsiE 'mypy|pyright' pyproject.toml requirements.txt 2>/dev/null; } && typecheck_cmd="mypy ."
   if [ -z "$lint_cmd" ]; then
@@ -107,9 +111,11 @@ fi
 [ -f go.mod ] && { add languages "go"; [ -z "$test_runner" ] && test_runner="go test"; }
 [ -f Cargo.toml ] && { add languages "rust"; [ -z "$test_runner" ] && test_runner="cargo test"; }
 
-# --- L3: monorepo topology + per-subtree detection (polyglot-aware) ---
-# Always scan subtrees so a polyglot repo (e.g. python root + node subdir) is not
-# mislabelled by its root language alone. Excludes the root's own manifests.
+# --- L3: monorepo topology — list member manifests (polyglot-aware) ---
+# Scan subtrees so a polyglot repo (e.g. python root + node subdir) is flagged as a
+# monorepo and its members listed. This only NAMES members; introspect re-runs this
+# detector against each member dir to detect its stack/data-layer (SKILL §3). Excludes
+# the root's own manifests.
 members=""
 while IFS= read -r m; do
   d="$(dirname "$m")"; add members "${d#./}"

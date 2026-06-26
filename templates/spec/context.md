@@ -5,12 +5,12 @@
      can resume without re-narration. Write it with `/harness-kit:handoff` at a
      stopping point; a fresh session continues from it with `/harness-kit:pickup`. -->
 <!-- resume:start -->
-<!-- resume:end -->
 - **Original ask (verbatim):**
 - **Phase / N of M:**
 - **Files touched:**
 - **Next command:**
 - **In-flight decisions:**
+<!-- resume:end -->
 
 ## Working notes
 <!-- Grounding: the real files/data you examined, decisions made, dead ends hit.

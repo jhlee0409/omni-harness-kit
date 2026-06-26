@@ -25,6 +25,16 @@ jobs:
         run: |
           for t in tests/*_test.sh; do echo "== $t =="; bash "$t"; done
 
+      - name: Identity + version coherence (what --strict can't catch)
+        run: |
+          # No banned/placeholder identity on the distribution surface.
+          if grep -rnE 'jack-buzzni|"name": *"jack"' .claude-plugin/ LICENSE; then
+            echo "::error::banned/placeholder identity on a distribution surface — use the jhlee0409 identity"; exit 1
+          fi
+          # plugin.json version must have a matching CHANGELOG section (no version drift).
+          v=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          grep -q "## \[$v\]" CHANGELOG.md || { echo "::error::plugin.json version $v has no '## [$v]' CHANGELOG section"; exit 1; }
+
       - name: Validate plugin manifest (strict)
         run: |
           npm install -g @anthropic-ai/claude-code

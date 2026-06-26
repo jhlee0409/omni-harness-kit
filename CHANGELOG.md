@@ -4,7 +4,10 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-06-26
+
+The introspect-first thesis extended to verification + build discipline, plus a
+full cross-file coherence audit (identity / version / detection-gap fixes).
 
 ### Added
 - **Stack-conditional critics** — `introspect` now generates a `db-verify` critic
@@ -26,6 +29,26 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   build-discipline gap: the kit had verification + artifacts but not the
   test-first / debug discipline. The spine `## Workflow` gains a Build bullet and
   `## Critics` gains `architecture-reviewer` (eight critics).
+
+### Fixed
+- **Coherence audit remediation** (a full cross-file / per-stack-generation sweep):
+  - **Identity** — `plugin.json` author, `marketplace.json` owner, and `LICENSE`
+    copyright now use the publishing identity (`Jack Lee` / `github.com/jhlee0409`);
+    the prior placeholder leaked an unrelated account onto the distribution surface.
+  - **Python data layer detected** — `detect.sh` now recognizes a Python DB client
+    (`pymongo` / `motor` / `sqlalchemy` / `psycopg` / `redis`), so a FastAPI + Mongo
+    backend correctly gets a `db-verify` critic (previously DB detection was
+    Node-only — the canonical backend stack silently shipped no `db-verify`).
+  - **Measurement vapor removed** — `introspect` no longer mentions a Tier-3
+    measurement subsystem or an `--enable-measurement` flag (neither exists); this
+    matches the "no measurement system" thesis the README/CHANGELOG state.
+  - **No dash sentinel** — an absent `dev`/`build`/`test` script now yields an empty
+    field, not a literal `-` that could leak into a generated `{{DEV_COMMAND}}`.
+  - **Monorepo** — `introspect` re-runs `detect.sh` per member (the root scan only
+    names members); doc/comment honesty fixed to match.
+  - Doc/template fixes: README hook paths (`hooks/scripts/…`), the five-key config
+    schema noted, the resume-block fields moved inside the `resume:*` markers, the
+    guard's default branches de-personalized, and a CI identity/version guard added.
 
 ## [0.2.0] - 2026-06-26
 
@@ -89,5 +112,6 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.3.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.1.0

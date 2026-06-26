@@ -31,8 +31,8 @@ discipline to *your* real commands.
 | `skills/introspect/` | **The core.** Scans a target repo (language / framework / test-runner / package-manager / monorepo / data-layer), then generates a tailored harness: a thin `CLAUDE.md` spine + an explicit agent-routing block (so the main agent auto-delegates) + a stack-specific `*-architect` agent. |
 | `agents/` (critic fleet) | Eight read-only critics the main agent routes to on demand — an independent check at each boundary: `instruction-critic` (is this the right ask?), `requirement-fidelity-critic` (spec drift from the original ask?), `change-verifier` (is the change complete?), `claim-checker` (is a terminal claim measured or asserted?), `spec-reviewer` (did the PR deliver its spec?), `readability-critic` (can a human decide from this output?), `pr-shepherd` (is the PR mergeable?), `architecture-reviewer` (is a structural change sound?). Independent verification is the reliability lever — no measurement system needed. (Critics share one limit: invocation-gated + same model class, so marginal-but-real, not a guarantee; the only proven 100% check is a human.) |
 | `agents/tdd-runner.md` | A delegate runner for one red → green → refactor cycle — writes the failing test first, confirms red, implements the minimum, refactors, returns green-with-evidence. |
-| `hooks/protected-branch-guard.sh` | A `PreToolUse` guard that asks before a `git commit`/`git push` on a protected branch. Fires in every repo the plugin is installed into. |
-| `hooks/verify-loop.sh` | A `Stop` hook — the **feedback** half of the loop. When code changed and a verify command is configured (the generated `.claude/harness-kit.json`), it surfaces that command so work is verified before "done". Non-blocking by default; opt into enforcement with `"blocking": true`. |
+| `hooks/scripts/protected-branch-guard.sh` | A `PreToolUse` guard that asks before a `git commit`/`git push` on a protected branch. Fires in every repo the plugin is installed into. |
+| `hooks/scripts/verify-loop.sh` | A `Stop` hook — the **feedback** half of the loop. When code changed and a verify command is configured (the generated `.claude/harness-kit.json`), it surfaces that command so work is verified before "done". Non-blocking by default; opt into enforcement with `"blocking": true`. |
 | `skills/new-spec/`, `skills/adr/`, `skills/worktree/` | Workflow skills — `/harness-kit:new-spec` scaffolds a spec triplet (spec / plan / context), `/harness-kit:adr` records the next numbered ADR, `/harness-kit:worktree` creates an isolated per-task worktree (only if you opt into that workflow). Structured work is where reliable output comes from (no measurement system needed). |
 | `skills/handoff/`, `skills/pickup/` | Resume loop — `/harness-kit:handoff` writes a resume block at a stopping point; `/harness-kit:pickup` continues from it in a fresh session. Validated with a discriminating eval: a fresh session reliably picked up a non-obvious decision a control (no handoff) missed 3/3. |
 | `skills/tdd/`, `skills/diagnose/`, `skills/karpathy-guidelines/` | Build discipline — `/harness-kit:tdd` (red → green → refactor, test first), `/harness-kit:diagnose` (reproduce → minimize → hypothesize → fix the cause → regression-test), and coding guidelines that counter common LLM mistakes (surgical changes, no overcomplication, verifiable success). |
@@ -92,6 +92,10 @@ config both hooks read (precedence: env override > this file > built-in default)
   "protected_branches": ["main", "master", "develop", "release"]
 }
 ```
+
+`introspect` also seeds two keys read outside the hooks: `worktree_workflow` (the
+worktree skill) and `pr_workflow` (`pr-shepherd`) — five keys in all; see the
+introspect skill for the full schema.
 
 Quick env toggles: `HARNESS_GUARD_OFF=1`, `HARNESS_VERIFY_OFF=1`,
 `HARNESS_PROTECTED_BRANCHES="main release"`.

@@ -32,17 +32,18 @@ check "$j" "['test_cmd']" "vitest run" "test_cmd has no space-bleed"
 check "$j" "['build_cmd']" "tsc" "build_cmd correct"
 check "$j" "['package_manager']" "npm" "npm from lockfile"
 
-echo "[2] python + pytest + fastapi"
+echo "[2] python + pytest + fastapi + motor (Mongo) — data layer drives db-verify"
 f="$TMP/py"; mkdir -p "$f"
 cat > "$f/pyproject.toml" <<'T'
 [project]
 name = "svc"
-dependencies = ["fastapi", "pytest"]
+dependencies = ["fastapi", "pytest", "motor"]
 T
 j="$(bash "$DETECT" "$f" 2>/dev/null)"
 check "$j" "['languages']" "python" "python detected"
 check "$j" "['frameworks']" "fastapi" "fastapi detected"
 check "$j" "['test_runner']" "pytest" "pytest runner"
+check "$j" "['data_layer']" "mongodb" "python Mongo client (motor) → data_layer mongodb"
 
 echo "[3] next.js + postgres, pnpm"
 f="$TMP/next-pg"; mkdir -p "$f"
