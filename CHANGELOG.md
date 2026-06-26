@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Build-discipline layer** — `/harness-kit:tdd` + the `tdd-runner` agent
+  (red → green → refactor, test-first), `/harness-kit:diagnose` (reproduce →
+  minimize → hypothesize → fix the cause → regression-test),
+  `/harness-kit:karpathy-guidelines` (surgical changes, no overcomplication,
+  verifiable success), and the `architecture-reviewer` critic (layers / smells /
+  invariants — the review pair of the generated `<stack>-architect`). Closes the
+  build-discipline gap: the kit had verification + artifacts but not the
+  test-first / debug discipline. The spine `## Workflow` gains a Build bullet and
+  `## Critics` gains `architecture-reviewer` (eight critics).
+
 ## [0.2.0] - 2026-06-26
 
 The workflow + verification layer: structured artifact management, a seven-critic

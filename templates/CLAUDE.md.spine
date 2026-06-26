@@ -55,6 +55,9 @@ conclusion. For a high-stakes conclusion the user will act on, delegate to
   never the repo root.
 - **Resume.** Stopping mid-task → `/harness-kit:handoff` writes a resume block; a
   fresh session continues with `/harness-kit:pickup`.
+- **Build.** A non-trivial behavior change → `/harness-kit:tdd` (red → green →
+  refactor) or delegate to `tdd-runner`. A hard bug / regression →
+  `/harness-kit:diagnose` (reproduce → minimize → hypothesize → fix the cause).
 {{WORKTREE_RULE}}
 
 ## Agents — the main agent delegates here automatically (no need to name them)
@@ -71,6 +74,7 @@ task invents gaps.
 - `spec-reviewer` — did the PR deliver its spec's scope? — at PR time (no-ops if no spec).
 - `readability-critic` — can a human decide from this output? — before shipping a human-facing surface.
 - `pr-shepherd` — is the PR mergeable? (CI + bot triage) — after opening / updating a PR.
+- `architecture-reviewer` — is a structural change sound? (layers / smells / invariants) — after a refactor.
 
 ## Architecture
 {{ARCHITECTURE_NOTE}}
