@@ -148,7 +148,8 @@ Record the answer; it drives the `worktree_workflow` flag and the
      "verify_command": "<typecheck && test>",
      "blocking": false,
      "protected_branches": ["main", "master", "develop", "release"],
-     "worktree_workflow": false
+     "worktree_workflow": false,
+     "pr_workflow": { "host": "github", "ci": "github-actions", "merge_gate": null }
    }
    ```
    - `verify_command` — the detected fast check (prefer `typecheck_cmd && test_cmd`,
@@ -160,6 +161,13 @@ Record the answer; it drives the `worktree_workflow` flag and the
      protected-branch guard asks before commit/push on these.
    - `worktree_workflow` — the §3.5 answer (`true`/`false`); records whether this
      repo uses the worktree-per-task workflow.
+   - `pr_workflow` — seeds what `pr-shepherd` can't safely assume (PR workflows
+     vary wildly). Detect: `host` from `git remote` (github / gitlab / bitbucket /
+     none), `ci` from config presence (`.github/workflows/` → github-actions,
+     `.gitlab-ci.yml` → gitlab-ci, `.circleci/` → circleci, `Jenkinsfile` →
+     jenkins, none). Leave `merge_gate: null` unless the user states one (then
+     pr-shepherd reports state + "you decide" rather than fabricating MERGEABLE).
+     Omit the whole block if there's no PR host (a local-only repo).
 
 4. **Scaffolding** (only if absent): ensure `scratch/` is gitignored (append it
    to `.gitignore`); create `<target>/specs/.gitkeep` and
