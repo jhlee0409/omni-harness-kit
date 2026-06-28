@@ -32,8 +32,24 @@ detect = json.load(open(json_file))
 langs = detect.get("languages", []) or []
 fws   = detect.get("frameworks", []) or []
 dl    = detect.get("data_layer", []) or []
-name  = detect.get("project_name", "") or "project"
-tr, tc, bc, dev = (detect.get(k, "") or "" for k in ("test_runner", "test_cmd", "build_cmd", "dev_cmd"))
+
+# Sanitize UNTRUSTED scalars before embedding them in a generated agent. The target
+# repo is untrusted (the kit's whole job is scanning it); a manifest `name` / script
+# can carry prompt-injection text or markdown that would otherwise land verbatim in the
+# agent a user later loads. Strip control chars + newlines (no multi-line breakout) and,
+# for free text, the markdown-structural chars that enable link/heading/code injection;
+# cap length. (languages/frameworks/store come from detect.sh's FIXED vocab — safe.)
+def clean(s, n=64, cmd=False):
+    s = re.sub(r'[\x00-\x1f\x7f]+', ' ', str(s))
+    if not cmd:
+        s = re.sub(r'[`\[\]()<>{}|*#]', '', s)
+    return re.sub(r'[ \t]+', ' ', s).strip()[:n]
+
+name  = clean(detect.get("project_name", "") or "project") or "project"
+tr  = clean(detect.get("test_runner", "") or "")
+tc  = clean(detect.get("test_cmd", "")  or "", n=120, cmd=True)
+bc  = clean(detect.get("build_cmd", "") or "", n=120, cmd=True)
+dev = clean(detect.get("dev_cmd", "")   or "", n=120, cmd=True)
 
 # STACK slug from the LANGUAGE (not a framework) → always a clean slug, never a dot.
 stack = "typescript" if "typescript" in langs else (langs[0] if langs else "code")

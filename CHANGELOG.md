@@ -6,6 +6,27 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-06-28
+
+Security hardening — the kit's whole job is scanning an UNTRUSTED target repo, so the
+last audit angle was content flowing FROM that repo's manifest INTO a generated agent a
+user later loads. The RCE execution vector was already closed (v0.4.x, `detect.sh` `add()`
+dropped `eval`); this closes the content-injection sibling.
+
+### Security
+- **Untrusted manifest content is now sanitized before it is embedded in a generated
+  agent.** A target repo's `package.json` `name` (or a `Cargo.toml` / `pyproject.toml`
+  field, or a script command) flowed VERBATIM into the rendered `<stack>-architect`
+  body — so a crafted `name` like `app](http://evil) **SYSTEM: …**` landed as live
+  markdown / a link / a prompt-injection string inside an agent definition. `render.sh`
+  now strips control chars + newlines (no multi-line / YAML-key breakout) and the
+  markdown-structural chars (`` ` `` `[]()<>{}|*#`) from these untrusted scalars and caps
+  their length. YAML frontmatter structure was already safe (the `name` key uses a fixed
+  stack slug, never the untrusted string); this neutralizes the agent *body* content too.
+  Languages / frameworks / store come from `detect.sh`'s fixed vocabulary and were never
+  a vector. New `render_test.sh` case [12] proves the payload is neutralized and the
+  frontmatter stays single-key-per-line valid YAML.
+
 ## [0.5.1] - 2026-06-28
 
 Final end-to-end gap sweep — the install→introspect→render→hooks→workflow spine was
@@ -303,6 +324,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.5.2]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.5.0
 [0.4.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.4.1

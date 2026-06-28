@@ -89,6 +89,34 @@ bash "$RENDER" "$TMP/drift" --out "$TMP/drift-out" >/dev/null 2>&1
 [ -f "$TMP/drift-out/node-architect.md" ] && ok "node-architect generated on re-run" || no "no node architect"
 [ ! -f "$TMP/drift-out/typescript-architect.md" ] && ok "stale typescript-architect reaped (no orphan)" || no "orphan typescript-architect left behind"
 
+echo "[12] untrusted manifest content is sanitized — no structural injection into the agent"
+mkdir -p "$TMP/evilrepo"
+python3 -c "import json;open('$TMP/evilrepo/package.json','w').write(json.dumps({'name':'x](http://evil) **h** \`c\`\nevil: y','dependencies':{'react':'^19'}}))"
+: > "$TMP/evilrepo/package-lock.json"
+bash "$RENDER" "$TMP/evilrepo" --out "$TMP/evil-out" >/dev/null 2>&1
+arch="$(ls "$TMP/evil-out/"*-architect.md 2>/dev/null | head -1)"
+[ -n "$arch" ] && ok "architect rendered for the evil repo" || no "no architect generated"
+# Precise check: extract the untrusted project_name AS EMBEDDED (between backticks on the
+# "architect for `…`" line) and assert the payload's structural-injection chars did NOT
+# survive INTO it. A whole-file grep is WRONG — the template body legitimately uses
+# **bold** and `file:line` backticks, so those are not evidence of injection.
+python3 - "$arch" <<'PY'
+import sys, re
+body = open(sys.argv[1]).read()
+m = re.search(r'architect for `([^`\n]*)`', body)
+name = m.group(1) if m else None
+bad = name is None or any(c in name for c in '][()*<>{}|#')
+sys.exit(1 if bad else 0)
+PY
+[ $? = 0 ] && ok "structural injection chars stripped from the embedded project_name" || no "structural injection chars survived into the agent name"
+python3 - "$arch" <<'PY'
+import sys,re
+fm=open(sys.argv[1]).read().split('---')[1]
+keys=[l.split(':',1)[0] for l in fm.splitlines() if re.match(r'^[a-zA-Z_]+:',l)]
+sys.exit(0 if all(k in ('name','description','tools','model') for k in keys) else 1)
+PY
+[ $? = 0 ] && ok "frontmatter stays valid YAML — no injected key, no multi-line breakout" || no "injected YAML key leaked into frontmatter"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
