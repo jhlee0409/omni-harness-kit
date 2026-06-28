@@ -22,6 +22,12 @@ echo "[3] numbering follows the highest existing (gap-tolerant)"
 c="$(cd "$TMP" && CLAUDE_PLUGIN_ROOT="$ROOT" bash "$SCRIPT" "Next One")"
 echo "$c" | grep -q 'docs/adr/0008-next-one.md' && ok "follows highest → 0008" || no "ignored existing ($c)"
 
+echo "[4] title with sed metacharacters ('/' and '&') — no crash, verbatim, file non-empty"
+d="$(cd "$TMP" && CLAUDE_PLUGIN_ROOT="$ROOT" bash "$SCRIPT" "CI/CD & A/B test" 2>&1)"; rc=$?
+[ "$rc" = 0 ] && ok "exits 0 on a slash+ampersand title" || no "crashed on metachar title (rc=$rc)"
+[ -s "$TMP/$d" ] && ok "the ADR this call wrote is non-empty (no 0-byte crash artifact)" || no "0-byte ADR from a crashed fill"
+grep -qF "CI/CD & A/B test" "$TMP/$d" && ok "title filled verbatim (no sed corruption)" || no "title missing/corrupted in $d"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

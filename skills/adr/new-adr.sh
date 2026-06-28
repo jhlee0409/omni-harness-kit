@@ -7,10 +7,23 @@ slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 
 [ -n "$slug" ] || slug="decision"
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 mkdir -p docs/adr
-# next number = highest existing NNNN + 1, zero-padded to 4.
-# `|| true`: an empty docs/adr makes grep exit 1, which would trip set -e/pipefail.
-last="$(ls docs/adr 2>/dev/null | grep -oE '^[0-9]{4}' | sort -n | tail -1 || true)"
-next="$(printf '%04d' "$(( 10#${last:-0} + 1 ))")"
+# next number = highest existing NNNN + 1, zero-padded to 4. A glob loop (not ls|grep,
+# SC2010) — robust to odd filenames; an empty dir leaves the glob literal, skipped by -e.
+last=0
+for f in docs/adr/[0-9][0-9][0-9][0-9]-*.md; do
+  [ -e "$f" ] || continue
+  n="${f##*/}"; n="${n%%-*}"
+  [ "$(( 10#$n ))" -gt "$(( 10#$last ))" ] && last="$n"
+done
+next="$(printf '%04d' "$(( 10#$last + 1 ))")"
 out="docs/adr/${next}-${slug}.md"
-sed -e "s/{{NUMBER}}/$next/g" -e "s/{{TITLE}}/$title/g" -e "s/{{DATE}}/$(date +%Y-%m-%d)/g" "$root/templates/adr.md" > "$out"
+# Fill via python3 str.replace, NOT sed — a title with '/' breaks sed (`bad flag`) and
+# '&' is silently expanded; both are ordinary in titles (CI/CD, Q&A, A/B test).
+python3 - "$root/templates/adr.md" "$next" "$title" "$(date +%Y-%m-%d)" > "$out" <<'PY'
+import sys
+t = open(sys.argv[1]).read()
+for k, v in (("{{NUMBER}}", sys.argv[2]), ("{{TITLE}}", sys.argv[3]), ("{{DATE}}", sys.argv[4])):
+    t = t.replace(k, v)
+sys.stdout.write(t)
+PY
 echo "$out"

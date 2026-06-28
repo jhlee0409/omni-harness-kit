@@ -79,6 +79,16 @@ mkdir -p "$TMP/blank"
 [ "$(render blank)" = "0" ] && ok "render exits 0 on a stackless repo" || no "render errored on blank repo"
 [ -z "$(ls -A "$TMP/blank-out" 2>/dev/null)" ] && ok "no agent files generated for a stackless repo" || no "generated spurious agents on blank repo"
 
+echo "[11] re-run reaps a stale <old-slug>-architect when the stack slug changes (no orphan)"
+mkdir -p "$TMP/drift"; printf '{"name":"app","dependencies":{"react":"^19"},"devDependencies":{"typescript":"^5"}}' > "$TMP/drift/package.json"; : > "$TMP/drift/tsconfig.json"; : > "$TMP/drift/package-lock.json"
+bash "$RENDER" "$TMP/drift" --out "$TMP/drift-out" >/dev/null 2>&1
+[ -f "$TMP/drift-out/typescript-architect.md" ] && ok "typescript-architect generated first run" || no "no ts architect"
+# drop typescript → slug flips to node; re-render into the same dir
+printf '{"name":"app","dependencies":{"react":"^19"}}' > "$TMP/drift/package.json"; rm -f "$TMP/drift/tsconfig.json"
+bash "$RENDER" "$TMP/drift" --out "$TMP/drift-out" >/dev/null 2>&1
+[ -f "$TMP/drift-out/node-architect.md" ] && ok "node-architect generated on re-run" || no "no node architect"
+[ ! -f "$TMP/drift-out/typescript-architect.md" ] && ok "stale typescript-architect reaped (no orphan)" || no "orphan typescript-architect left behind"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

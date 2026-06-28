@@ -124,7 +124,8 @@ spine plus a "re-run once you add a stack" note. The **generated harness is in E
 Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
 
 - **Detection + the deterministic engine** (`detect.sh`, the two hooks, the
-  scaffolders, the template contracts) is covered by **83 tests**.
+  scaffolders, the template contracts) is covered by an extensive shell test suite,
+  run in CI on every push.
 - **`introspect` has been dogfooded against real public repos** across the matrix —
   Go (`cobra`), Rust (`ripgrep`), a TS/JS monorepo (`create-t3-turbo`), Python+Postgres
   + React monorepo (`full-stack-fastapi-template`), a Python library (`flask`), and a

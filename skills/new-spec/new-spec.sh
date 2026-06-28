@@ -8,8 +8,15 @@ slug="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 dir="specs/$(date +%Y%m%d)-${slug}"
 mkdir -p "$dir"
+today="$(date +%Y-%m-%d)"
 for f in spec plan context; do
   if [ -f "$dir/$f.md" ]; then echo "exists (skipped): $dir/$f.md" >&2; continue; fi
-  sed -e "s/{{NAME}}/$name/g" -e "s/{{DATE}}/$(date +%Y-%m-%d)/g" "$root/templates/spec/$f.md" > "$dir/$f.md"
+  # python3 str.replace, NOT sed — a name with '/' or '&' would crash/corrupt sed.
+  python3 - "$root/templates/spec/$f.md" "$name" "$today" > "$dir/$f.md" <<'PY'
+import sys
+t = open(sys.argv[1]).read()
+t = t.replace("{{NAME}}", sys.argv[2]).replace("{{DATE}}", sys.argv[3])
+sys.stdout.write(t)
+PY
 done
 echo "$dir"

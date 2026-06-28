@@ -12,6 +12,9 @@ set -uo pipefail
 
 TARGET="${1:-.}"
 cd "$TARGET" 2>/dev/null || { echo '{"error":"target not found"}'; exit 1; }
+# Preflight: the engine parses + emits JSON via python3. Without it, detection would
+# emit empty stdout AND exit 0 — a silent fail. Fail loudly instead (like target-not-found).
+command -v python3 >/dev/null 2>&1 || { echo '{"error":"python3 not found"}'; exit 1; }
 ROOT="$(pwd)"
 
 log() { printf '%s\n' "$*" >&2; }

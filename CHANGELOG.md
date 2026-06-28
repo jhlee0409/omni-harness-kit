@@ -6,6 +6,32 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-28
+
+Final end-to-end gap sweep — the install→introspect→render→hooks→workflow spine was
+confirmed clean, but running the WHOLE kit once on ordinary input surfaced scaffolder
+bugs. All fixed.
+
+### Fixed
+- **ADR / spec title with `/` or `&` crashed or corrupted the scaffolder.**
+  `new-adr.sh` / `new-spec.sh` filled the template with `sed`, so a perfectly ordinary
+  title — `CI/CD`, `A/B test`, `Q&A` — hit `sed: bad flag` (crash + a 0-byte ADR
+  occupying the number) or silently mangled the `&`. Now filled with `python3`
+  `str.replace` (metacharacter-safe). The most likely first-run failure, gone.
+- **`new-adr.sh` used `ls | grep`** (SC2010, fragile on odd filenames) → replaced with a
+  glob loop. **CI shellcheck now covers ALL scripts** (the scaffolders were unchecked)
+  and is **blocking** (was `|| true`).
+- **`render.sh` orphaned a stale `<old-stack>-architect.md`** when the stack slug changed
+  on re-run (e.g. typescript → node) — now reaped, like db-verify/ui-verify.
+- **`detect.sh` silently failed (empty stdout, exit 0) when `python3` was missing** — now
+  emits `{"error":"python3 not found"}` and exits non-zero.
+- README test-count claim made version-agnostic (was a stale "83").
+
+### Added
+- `tests/resume_loop_test.sh` pins the handoff ↔ context.md ↔ pickup marker contract (a
+  1-char drift in any of the three now fails CI instead of silently breaking resume).
+- Regression tests for the metacharacter titles + the architect reap. → 172 tests.
+
 ## [0.5.0] - 2026-06-26
 
 User-diversity coverage — handle the tails of the real-user distribution
@@ -277,6 +303,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.5.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.5.0
 [0.4.1]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.4.1
 [0.4.0]: https://github.com/jhlee0409/claude-harness-kit/releases/tag/v0.4.0

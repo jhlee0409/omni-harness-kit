@@ -18,8 +18,10 @@ jobs:
       - name: Shell syntax + lint
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
-          for f in skills/introspect/*.sh hooks/scripts/*.sh tests/*.sh; do bash -n "$f"; done
-          shellcheck -S warning skills/introspect/*.sh hooks/scripts/*.sh || true
+          # ALL shell scripts (scaffolders were previously unchecked) — syntax + lint, BLOCKING.
+          scripts=$(find skills hooks tests -name '*.sh')
+          for f in $scripts; do bash -n "$f"; done
+          shellcheck -S warning $scripts
 
       - name: Tests (detection, verify-loop, guard, update-block)
         run: |
