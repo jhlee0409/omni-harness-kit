@@ -11,7 +11,11 @@
 </p>
 
 <p align="center">
-  <b>Most Claude Code harnesses ship the same config to every repo.<br>Harness Kit reads yours first.</b>
+  <b>Most AI coding harnesses ship the same config to every repo.<br>Harness Kit reads yours first.</b>
+</p>
+
+<p align="center">
+  Works with <b>Claude Code</b> and <b>OpenCode</b> — same skills, same discipline, your runtime.
 </p>
 
 It introspects your repo's tech stack and generates a harness tailored to it — a
@@ -42,6 +46,8 @@ discipline to *your* real commands.
 
 ## Install
 
+### Claude Code
+
 ```bash
 # add this repo as a marketplace, then install the plugin
 /plugin marketplace add jhlee0409/claude-harness-kit
@@ -53,6 +59,18 @@ Local development (no install step):
 ```bash
 claude --plugin-dir /path/to/claude-harness-kit
 ```
+
+### OpenCode
+
+Add to your project's `.opencode/` config or global `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "plugin": ["./path/to/claude-harness-kit/adapters/opencode/src/index.ts"]
+}
+```
+
+See [`adapters/opencode/README.md`](adapters/opencode/README.md) for details.
 
 ## Use
 
@@ -122,6 +140,15 @@ spine plus a "re-run once you add a stack" note. The **generated harness is in E
 ## Status
 
 Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
+
+- **OpenCode adapter** (`adapters/opencode/`) — plugin entry point with verify-loop,
+  branch-guard, and compaction hooks. 13 unit tests pass (dogfood suite with mock shell).
+  Not yet dogfooded in a live OpenCode session.
+- **Agentic engine** (`agentic-engine/`) — all 4 modules implemented and tested (83 tests,
+  all pass): cross-vendor verification (21 tests), rag-feedback retrieval (20 tests),
+  intent-router classification (12 tests), verify-evidence capture (17 tests). CC adapters
+  work fully; OC adapters for rag-feedback and intent-router are stubbed (system.transform
+  doesn't expose the user's latest message — known OpenCode limitation).
 
 - **Detection + the deterministic engine** (`detect.sh`, the two hooks, the
   scaffolders, the template contracts) is covered by an extensive shell test suite,
