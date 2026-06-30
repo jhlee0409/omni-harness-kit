@@ -12,7 +12,7 @@ export async function isDirty(
 ): Promise<boolean> {
   try {
     const result = await $`git -C ${dir} status --porcelain`.quiet();
-    const text = String(result).trim();
+    const text = result.text().trim();
     return text.length > 0;
   } catch {
     return false;
@@ -26,7 +26,7 @@ export async function currentBranch(
 ): Promise<string | null> {
   try {
     const result = await $`git -C ${dir} branch --show-current`.quiet();
-    return String(result).trim() || null;
+    return result.text().trim() || null;
   } catch {
     return null;
   }
