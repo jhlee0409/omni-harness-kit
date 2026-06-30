@@ -31,12 +31,22 @@ agentic-engine/
 
 ## Module Status
 
-| Module | Status | CC Adapter | OpenCode Adapter |
-|---|---|---|---|
-| `rag-feedback/` | 📋 Specification only | Planned | Planned |
-| `intent-router/` | 📋 Specification only | Planned | Planned |
-| `cross-vendor/` | 📋 Specification only | Planned | Planned |
-| `verify-evidence/` | 📋 Specification only | Planned | Planned |
+| Module | Status | Tests | CC Adapter | OpenCode Adapter |
+|---|---|---|---|---|
+| `cross-vendor/` | ✅ Implemented | 21 pass | ✅ Stop hook | ✅ tool.execute.after |
+| `rag-feedback/` | ✅ Implemented | 20 pass | ✅ UserPromptSubmit | ⚠️ Stubbed (no user msg access) |
+| `intent-router/` | ✅ Implemented | 12 pass | ✅ UserPromptSubmit | ⚠️ Stubbed (no user msg access) |
+| `verify-evidence/` | ✅ Implemented | 17 pass | ✅ SubagentStop | ✅ tool.execute.after |
+
+**83 tests total, all passing.**
+
+### Known OpenCode Limitation
+
+`experimental.chat.system.transform` fires per-LLM-call, not per-user-message,
+and does not expose the latest user message. rag-feedback and intent-router
+require the user's message for query-based retrieval/classification. Their OC
+adapters are stubbed with TODO — proper implementation requires a
+`chat.prompt.before` or similar hook. CC adapters work fully.
 
 ## Relationship to the Source (ai-showhost)
 
