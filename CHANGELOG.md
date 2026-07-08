@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-09
+
+**Version-manifest alignment.** The `v0.6.0` release tag was cut with
+`.claude-plugin/plugin.json` still reporting `0.5.2`, so installers of `harness-kit@0.6.0`
+saw a manifest that mis-reported its own version. This patch bumps the manifest to match
+the release and closes the drift.
+
+### Fixed
+- `plugin.json` `version` bumped `0.5.2` → `0.6.1` to align the plugin manifest with the
+  published release tag and CHANGELOG (the CI version-coherence gate now passes).
+
 ## [0.6.0] - 2026-06-30
 
 **Dual-runtime support + agentic engine.** The kit now works with both Claude Code
