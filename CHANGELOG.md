@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`verify-loop` Stop hook looped until Claude Code's block cap.** A Stop hook that
+  emits `hookSpecificOutput.additionalContext` (non-blocking) or `decision: "block"`
+  (blocking) *continues the turn*. Claude Code re-fires the hook on the model's next
+  stop with `stop_hook_active: true`; the working tree is still dirty, so the hook
+  re-nudged — indefinitely. Turns only ended when the consecutive-block cap tripped
+  ("A hook blocked the turn from ending 9 consecutive times"), forcing the harness to
+  override. The hook never read its stdin, so it never saw `stop_hook_active`. It now
+  stands down on a re-fire, nudging once per turn. Both the blocking and non-blocking
+  paths were affected.
+- **`verify-loop` could hang on an unpiped stdin.** Guarding the above with a bare
+  `cat` would block forever when stdin is a TTY or an inherited pipe that is never
+  closed. Stdin is now read only when a payload can arrive, with a bounded read; no
+  payload degrades to "first fire".
+
 ## [0.6.1] - 2026-07-09
 
 **Version-manifest alignment.** The `v0.6.0` release tag was cut with
