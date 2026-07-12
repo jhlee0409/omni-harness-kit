@@ -38,7 +38,13 @@ fi
 [ "$stop_hook_active" = "true" ] && exit 0
 
 runtime="${HARNESS_RUNTIME:-claude}"
-proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
+if [ "$runtime" = "codex" ]; then
+  # Codex supplies the active project directory in the signed hook payload. Do
+  # not let an inherited Claude Code environment point this hook at another repo.
+  proj="${payload_cwd:-$PWD}"
+else
+  proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
+fi
 cfg="$proj/.claude/harness-kit.json"
 [ -f "$cfg" ] || exit 0   # only repos that ran introspect opt in
 

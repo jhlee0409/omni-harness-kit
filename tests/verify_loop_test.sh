@@ -114,6 +114,14 @@ out="$(printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$d" bash "$HOOK" 2>/dev/null
 echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);ctx=d.get("hookSpecificOutput",{}).get("additionalContext","");sys.exit(0 if d.get("hookSpecificOutput",{}).get("hookEventName")=="Stop" and "pytest" in ctx else 1)' \
   && ok "Claude Code payload keeps additionalContext" || no "Claude Code payload was misclassified as Codex (got: $out)"
 
+echo "[14] Codex payload cwd wins over an inherited CLAUDE_PROJECT_DIR"
+env_d="$TMP/p14-env"; mkproj "$env_d" '{"verify_command":"VERIFY_ENV_REPO","blocking":false}' dirty
+payload_d="$TMP/p14-payload"; mkproj "$payload_d" '{"verify_command":"VERIFY_PAYLOAD_REPO","blocking":false}' dirty
+payload="$(python3 -c 'import json,sys;print(json.dumps({"hook_event_name":"Stop","cwd":sys.argv[1],"stop_hook_active":False}))' "$payload_d")"
+out="$(printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$env_d" HARNESS_RUNTIME=codex bash "$HOOK" 2>/dev/null)"
+echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);reason=d.get("reason","");sys.exit(0 if "VERIFY_PAYLOAD_REPO" in reason and "VERIFY_ENV_REPO" not in reason else 1)' \
+  && ok "Codex payload cwd is authoritative" || no "Codex used inherited CLAUDE_PROJECT_DIR (got: $out)"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

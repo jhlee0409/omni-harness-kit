@@ -41,7 +41,7 @@ contracts separate.
   Claude Code keeps its non-blocking `additionalContext` contract.
 
 ### Verified scope
-- Live Codex CLI plugin installation and one blocking Stop continuation completed
+- Live Codex CLI plugin installation and one Stop continuation completed
   successfully, including the configured verification command and loop termination.
 - Codex protected-branch `PreToolUse`, Codex custom-agent generation, and Codex-native
   `introspect` output remain deferred.
