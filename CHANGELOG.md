@@ -24,6 +24,8 @@ contracts separate.
 - Contract tests for Codex `cwd`, blocking continuation, `stop_hook_active` loop
   prevention, non-blocking `systemMessage`, marketplace wiring, and CC output
   preservation.
+- A model-free CI smoke that uses the real Codex CLI to ingest and install the
+  packaged plugin into an isolated `CODEX_HOME`.
 
 ### Fixed
 - `tests/detect_test.sh` no longer reports green when the blank-repository assertion

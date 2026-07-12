@@ -94,6 +94,21 @@ assert "codex plugin add harness-kit@harness-kit-codex" in readme
 assert "expose this checkout as `plugins/harness-kit`" not in readme
 PY
 
+echo "[5] CI runs a model-free Codex plugin installation smoke"
+python3 - "$ROOT" <<'PY' \
+  && ok "CI installs the Codex plugin without an agent turn" \
+  || no "CI Codex installation smoke is not wired"
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+workflow = (root / ".github/workflows/ci.yml").read_text()
+smoke = root / "tests/codex_install_smoke.sh"
+assert smoke.is_file()
+assert "npm install -g @openai/codex" in workflow
+assert "bash tests/codex_install_smoke.sh" in workflow
+PY
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
