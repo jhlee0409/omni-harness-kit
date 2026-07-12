@@ -13,25 +13,38 @@ set -uo pipefail
 # Stand down when we are the reason this turn exists.
 #
 # Emitting additionalContext (or decision=block) from a Stop hook CONTINUES the turn.
-# Claude Code then re-fires this hook when the model next tries to stop, setting
+# Claude Code and Codex re-fire this hook when the model next tries to stop, setting
 # stop_hook_active=true. The tree is still dirty, so an unguarded hook re-nudges —
-# forever — and the turn only ends when CC's consecutive-block cap trips. Nudge once
-# per turn, then let the model stop.
+# forever. Nudge once per turn, then let the model stop.
 #
 # Read stdin only when a payload can actually arrive: a bare `cat` blocks forever if
 # stdin is a TTY or an inherited pipe nobody closes. No payload → treat as first fire.
 hook_input=""
 [ -t 0 ] || IFS= read -r -d '' -t 2 hook_input || true
-case "${hook_input:-}" in
-  *stop_hook_active*)
-    printf '%s' "$hook_input" | python3 -c 'import json,sys
-try: active = bool(json.loads(sys.stdin.read() or "{}").get("stop_hook_active"))
-except Exception: active = False
-sys.exit(0 if active else 1)' 2>/dev/null && exit 0
-    ;;
-esac
+payload_cwd=""
+stop_hook_active="false"
+if [ -n "$hook_input" ]; then
+  IFS=$'\x1f' read -r payload_cwd stop_hook_active < <(printf '%s' "$hook_input" | python3 -c '
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+cwd=d.get("cwd", "")
+print("\x1f".join([
+    cwd if isinstance(cwd, str) else "",
+    "true" if d.get("stop_hook_active") is True else "false",
+]))
+' 2>/dev/null)
+fi
+[ "$stop_hook_active" = "true" ] && exit 0
 
-proj="${CLAUDE_PROJECT_DIR:-$PWD}"
+runtime="${HARNESS_RUNTIME:-claude}"
+if [ "$runtime" = "codex" ]; then
+  # Codex supplies the active project directory in the signed hook payload. Do
+  # not let an inherited Claude Code environment point this hook at another repo.
+  proj="${payload_cwd:-$PWD}"
+else
+  proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
+fi
 cfg="$proj/.claude/harness-kit.json"
 [ -f "$cfg" ] || exit 0   # only repos that ran introspect opt in
 
@@ -50,6 +63,11 @@ dirty="$(cd "$proj" 2>/dev/null && git status --porcelain 2>/dev/null | head -1)
 
 msg="harness-kit: changes present — verify before done with: ${cmd}"
 if [ "$blocking" = "true" ]; then
+  python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
+elif [ "$runtime" = "codex" ]; then
+  # Codex systemMessage is UI-only; it does not re-enter the model loop. A Stop
+  # decision=block is continuation feedback (not a rejected turn): Codex creates
+  # one follow-up prompt from reason, then stop_hook_active breaks the loop.
   python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
 else
   # Non-blocking: surface via the documented Stop channel on STDOUT. A Stop hook's

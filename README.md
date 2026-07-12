@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  Works with <b>Claude Code</b> and <b>OpenCode</b> — same skills, same discipline, your runtime.
+  Built for <b>Claude Code</b>, with experimental <b>Codex</b> and <b>OpenCode</b> adapters.
 </p>
 
 It introspects your repo's tech stack and generates a harness tailored to it — a
@@ -36,7 +36,7 @@ discipline to *your* real commands.
 | `agents/` (critic fleet) | Eight read-only critics the main agent routes to on demand — an independent check at each boundary: `instruction-critic` (is this the right ask?), `requirement-fidelity-critic` (spec drift from the original ask?), `change-verifier` (is the change complete?), `claim-checker` (is a terminal claim measured or asserted?), `spec-reviewer` (did the PR deliver its spec?), `readability-critic` (can a human decide from this output?), `pr-shepherd` (is the PR mergeable?), `architecture-reviewer` (is a structural change sound?). Independent verification is the reliability lever — no measurement system needed. (Critics share one limit: invocation-gated + same model class, so marginal-but-real, not a guarantee; the only proven 100% check is a human.) |
 | `agents/tdd-runner.md` | A delegate runner for one red → green → refactor cycle — writes the failing test first, confirms red, implements the minimum, refactors, returns green-with-evidence. |
 | `hooks/scripts/protected-branch-guard.sh` | A `PreToolUse` guard that asks before a `git commit`/`git push` on a protected branch. Fires in every repo the plugin is installed into. |
-| `hooks/scripts/verify-loop.sh` | A `Stop` hook — the **feedback** half of the loop. When code changed and a verify command is configured (the generated `.claude/harness-kit.json`), it surfaces that command so work is verified before "done". Non-blocking by default; opt into enforcement with `"blocking": true`. |
+| `hooks/scripts/verify-loop.sh` | A `Stop` hook — the **feedback** half of the loop. When code changed and a verify command is configured (the generated `.claude/harness-kit.json`), it surfaces that command so work is verified before "done". Claude Code is non-blocking by default; Codex creates one continuation because its UI-only warning channel cannot reach the model. |
 | `skills/new-spec/`, `skills/adr/`, `skills/worktree/` | Workflow skills — `/harness-kit:new-spec` scaffolds a spec triplet (spec / plan / context), `/harness-kit:adr` records the next numbered ADR, `/harness-kit:worktree` creates an isolated per-task worktree (only if you opt into that workflow). Structured work is where reliable output comes from (no measurement system needed). |
 | `skills/handoff/`, `skills/pickup/` | Resume loop — `/harness-kit:handoff` writes a resume block at a stopping point; `/harness-kit:pickup` continues from it in a fresh session. Validated with a discriminating eval: a fresh session reliably picked up a non-obvious decision a control (no handoff) missed 3/3. |
 | `skills/tdd/`, `skills/diagnose/`, `skills/coding-guidelines/` | Build discipline — `/harness-kit:tdd` (red → green → refactor, test first), `/harness-kit:diagnose` (reproduce → minimize → hypothesize → fix the cause → regression-test), and coding guidelines that counter common LLM mistakes (surgical changes, no overcomplication, verifiable success). |
@@ -59,6 +59,28 @@ Local development (no install step):
 ```bash
 claude --plugin-dir /path/to/claude-harness-kit
 ```
+
+### Codex (experimental tracer)
+
+Codex currently loads the shared skills and the runtime-aware `Stop` verify loop
+through `.codex-plugin/plugin.json`. The Codex manifest explicitly selects
+`adapters/codex/hooks.json`, so it does **not** load the Claude Code-only
+protected-branch `PreToolUse` guard.
+
+Add this repository as a Codex marketplace, then install the plugin:
+
+```bash
+codex plugin marketplace add jhlee0409/claude-harness-kit --ref main
+codex plugin add harness-kit@harness-kit-codex
+```
+
+Start a new task after installation. Codex will ask you to review and trust the
+plugin's Stop hook before it runs; use `/hooks` to inspect that exact definition.
+
+This is intentionally a tracer, not a full migration: `introspect` still emits
+Claude Code-oriented `CLAUDE.md` / `.claude/agents` output, and Codex custom
+agents are not generated yet. Use Claude Code to run `introspect` until that
+adapter exists.
 
 ### OpenCode
 
@@ -101,8 +123,9 @@ The detector follows the proven scaffolding/introspection playbook
 
 ## Configuration
 
-`introspect` generates `.claude/harness-kit.json` in the target repo — the single
-config both hooks read (precedence: env override > this file > built-in default):
+`introspect` generates `.claude/harness-kit.json` in the target repo — the shared
+config read by the Claude Code hooks and the Codex Stop adapter (precedence: env
+override > this file > built-in default):
 
 ```json
 {
@@ -141,6 +164,13 @@ spine plus a "re-run once you add a stack" note. The **generated harness is in E
 
 Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
 
+- **Codex tracer** (`.codex-plugin/`, `adapters/codex/`) — shared skills plus the
+  Stop verify loop. Contract tests cover authoritative Codex `cwd`,
+  `decision: block` continuation, `stop_hook_active` loop prevention, and preservation
+  of Claude Code's `additionalContext` output. A live
+  Codex CLI 0.144 run installed the plugin, continued once, ran the configured
+  verify command, and then stopped without looping. Protected-branch `PreToolUse`
+  and Codex custom-agent generation remain deferred.
 - **OpenCode adapter** (`adapters/opencode/`) — plugin entry point with verify-loop,
   branch-guard, and compaction hooks. 13 unit tests pass (dogfood suite with mock shell).
   Not yet dogfooded in a live OpenCode session.

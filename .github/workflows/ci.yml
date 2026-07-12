@@ -27,6 +27,11 @@ jobs:
         run: |
           for t in tests/*_test.sh; do echo "== $t =="; bash "$t"; done
 
+      - name: Codex plugin install smoke (model-free)
+        run: |
+          npm install -g @openai/codex@0.141.0
+          bash tests/codex_install_smoke.sh
+
       - name: Identity + version coherence (what --strict can't catch)
         run: |
           # No banned/placeholder identity on the distribution surface.

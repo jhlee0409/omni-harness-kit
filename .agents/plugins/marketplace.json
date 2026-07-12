@@ -1,0 +1,21 @@
+{
+  "name": "harness-kit-codex",
+  "interface": {
+    "displayName": "Harness Kit for Codex"
+  },
+  "plugins": [
+    {
+      "name": "harness-kit",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/jhlee0409/claude-harness-kit.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "HARNESS_RUNTIME=codex \"${PLUGIN_ROOT}\"/hooks/scripts/verify-loop.sh",
+            "timeout": 30,
+            "statusMessage": "Checking repository verification state"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,21 +6,45 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Fixed
+## [0.7.0] - 2026-07-12
 
-- **`verify-loop` Stop hook looped until Claude Code's block cap.** A Stop hook that
-  emits `hookSpecificOutput.additionalContext` (non-blocking) or `decision: "block"`
-  (blocking) *continues the turn*. Claude Code re-fires the hook on the model's next
-  stop with `stop_hook_active: true`; the working tree is still dirty, so the hook
-  re-nudged — indefinitely. Turns only ended when the consecutive-block cap tripped
-  ("A hook blocked the turn from ending 9 consecutive times"), forcing the harness to
-  override. The hook never read its stdin, so it never saw `stop_hook_active`. It now
-  stands down on a re-fire, nudging once per turn. Both the blocking and non-blocking
-  paths were affected.
-- **`verify-loop` could hang on an unpiped stdin.** Guarding the above with a bare
-  `cat` would block forever when stdin is a TTY or an inherited pipe that is never
-  closed. Stdin is now read only when a payload can arrive, with a bounded read; no
-  payload degrades to "first fire".
+**Codex tracer + runtime-safe Stop feedback.** Harness Kit can now be installed as
+a Codex plugin without loading the Claude Code-only protected-branch guard. The
+shared verification loop understands both runtimes while keeping their output
+contracts separate.
+
+### Added
+- `.codex-plugin/plugin.json` with shared skill discovery and an explicit Codex
+  lifecycle-hook path.
+- `adapters/codex/hooks.json` with a Stop-only adapter. It sets
+  `HARNESS_RUNTIME=codex` instead of guessing the runtime from overlapping payload
+  fields.
+- `.agents/plugins/marketplace.json` with a Git-backed repository-root source for
+  direct Codex marketplace installation.
+- Contract tests for Codex `cwd`, Stop continuation, `stop_hook_active` loop
+  prevention, marketplace wiring, and CC output
+  preservation.
+- A model-free CI smoke that uses the real Codex CLI to ingest and install the
+  packaged plugin into an isolated `CODEX_HOME`.
+
+### Fixed
+- `tests/detect_test.sh` no longer reports green when the blank-repository assertion
+  calls missing helpers; unexpected shell failures now stop the suite.
+- **The shared Stop hook looped until the runtime's block cap.** Claude Code and
+  Codex re-fire Stop after a continuation with `stop_hook_active: true`; the hook
+  now stands down on that re-fire for both blocking and non-blocking paths.
+- **The Stop hook could hang on an unclosed stdin.** Input is now read only when a
+  payload can arrive and is bounded to two seconds. A TTY, malformed payload, or
+  inherited pipe that never closes degrades safely instead of hanging.
+- **Codex non-blocking reminders were UI-only and did not re-enter the model loop.**
+  Codex now uses the documented Stop `decision: block` continuation contract;
+  Claude Code keeps its non-blocking `additionalContext` contract.
+
+### Verified scope
+- Live Codex CLI plugin installation and one Stop continuation completed
+  successfully, including the configured verification command and loop termination.
+- Codex protected-branch `PreToolUse`, Codex custom-agent generation, and Codex-native
+  `introspect` output remain deferred.
 
 ## [0.6.1] - 2026-07-09
 
