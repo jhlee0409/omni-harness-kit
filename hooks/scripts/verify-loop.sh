@@ -10,7 +10,25 @@
 set -uo pipefail
 [ "${HARNESS_VERIFY_OFF:-0}" = "1" ] && exit 0
 
-proj="${CLAUDE_PROJECT_DIR:-$PWD}"
+payload="$(cat 2>/dev/null || true)"
+payload_cwd=""
+runtime="${HARNESS_RUNTIME:-claude}"
+stop_hook_active="false"
+if [ -n "$payload" ]; then
+  IFS=$'\x1f' read -r payload_cwd stop_hook_active < <(printf '%s' "$payload" | python3 -c '
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+cwd=d.get("cwd", "")
+print("\x1f".join([
+    cwd if isinstance(cwd, str) else "",
+    "true" if d.get("stop_hook_active") is True else "false",
+]))
+' 2>/dev/null)
+fi
+[ "$stop_hook_active" = "true" ] && exit 0
+
+proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
 cfg="$proj/.claude/harness-kit.json"
 [ -f "$cfg" ] || exit 0   # only repos that ran introspect opt in
 
@@ -30,6 +48,8 @@ dirty="$(cd "$proj" 2>/dev/null && git status --porcelain 2>/dev/null | head -1)
 msg="harness-kit: changes present — verify before done with: ${cmd}"
 if [ "$blocking" = "true" ]; then
   python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
+elif [ "$runtime" = "codex" ]; then
+  python3 -c 'import json,sys;print(json.dumps({"systemMessage":sys.argv[1]}))' "$msg"
 else
   # Non-blocking: surface via the documented Stop channel on STDOUT. A Stop hook's
   # stderr (and plain stdout) on exit 0 is DISCARDED by Claude Code — only

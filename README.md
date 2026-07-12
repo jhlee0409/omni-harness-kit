@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  Works with <b>Claude Code</b> and <b>OpenCode</b> — same skills, same discipline, your runtime.
+  Built for <b>Claude Code</b>, with experimental <b>Codex</b> and <b>OpenCode</b> adapters.
 </p>
 
 It introspects your repo's tech stack and generates a harness tailored to it — a
@@ -60,6 +60,26 @@ Local development (no install step):
 claude --plugin-dir /path/to/claude-harness-kit
 ```
 
+### Codex (experimental tracer)
+
+Codex currently loads the shared skills and the runtime-aware `Stop` verify loop
+through `.codex-plugin/plugin.json`. The Codex manifest explicitly selects
+`adapters/codex/hooks.json`, so it does **not** load the Claude Code-only
+protected-branch `PreToolUse` guard.
+
+For local development, expose this checkout as `plugins/harness-kit` inside a
+Codex marketplace root, then install it from that marketplace:
+
+```bash
+codex plugin marketplace add /path/to/marketplace-root
+codex plugin add harness-kit@your-marketplace-name
+```
+
+This is intentionally a tracer, not a full migration: `introspect` still emits
+Claude Code-oriented `CLAUDE.md` / `.claude/agents` output, and Codex custom
+agents are not generated yet. Use Claude Code to run `introspect` until that
+adapter exists.
+
 ### OpenCode
 
 Add to your project's `.opencode/` config or global `~/.config/opencode/opencode.json`:
@@ -101,8 +121,9 @@ The detector follows the proven scaffolding/introspection playbook
 
 ## Configuration
 
-`introspect` generates `.claude/harness-kit.json` in the target repo — the single
-config both hooks read (precedence: env override > this file > built-in default):
+`introspect` generates `.claude/harness-kit.json` in the target repo — the shared
+config read by the Claude Code hooks and the Codex Stop adapter (precedence: env
+override > this file > built-in default):
 
 ```json
 {
@@ -141,6 +162,13 @@ spine plus a "re-run once you add a stack" note. The **generated harness is in E
 
 Early PoC (0.x — expect breaking changes). What is actually proven, stated honestly:
 
+- **Codex tracer** (`.codex-plugin/`, `adapters/codex/`) — shared skills plus the
+  Stop verify loop. Eight contract tests cover Codex `cwd`, blocking continuation,
+  `stop_hook_active` loop prevention, non-blocking `systemMessage`, and preservation
+  of Claude Code's `additionalContext` output. A live
+  Codex CLI 0.144 run installed the plugin, continued once, ran the configured
+  verify command, and then stopped without looping. Protected-branch `PreToolUse`
+  and Codex custom-agent generation remain deferred.
 - **OpenCode adapter** (`adapters/opencode/`) — plugin entry point with verify-loop,
   branch-guard, and compaction hooks. 13 unit tests pass (dogfood suite with mock shell).
   Not yet dogfooded in a live OpenCode session.
