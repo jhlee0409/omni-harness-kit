@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "harness-kit",
   "displayName": "Harness Kit",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A portable Claude Code engineering harness — plan → work → verify → feedback discipline as reusable agents, skills, and hooks, plus an `introspect` skill that tailors a .claude/ setup to any repo's tech stack.",
   "author": { "name": "Jack Lee", "url": "https://github.com/jhlee0409" },
   "license": "MIT",

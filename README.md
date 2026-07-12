@@ -67,13 +67,15 @@ through `.codex-plugin/plugin.json`. The Codex manifest explicitly selects
 `adapters/codex/hooks.json`, so it does **not** load the Claude Code-only
 protected-branch `PreToolUse` guard.
 
-For local development, expose this checkout as `plugins/harness-kit` inside a
-Codex marketplace root, then install it from that marketplace:
+Add this repository as a Codex marketplace, then install the plugin:
 
 ```bash
-codex plugin marketplace add /path/to/marketplace-root
-codex plugin add harness-kit@your-marketplace-name
+codex plugin marketplace add jhlee0409/claude-harness-kit --ref main
+codex plugin add harness-kit@harness-kit-codex
 ```
+
+Start a new task after installation. Codex will ask you to review and trust the
+plugin's Stop hook before it runs; use `/hooks` to inspect that exact definition.
 
 This is intentionally a tracer, not a full migration: `introspect` still emits
 Claude Code-oriented `CLAUDE.md` / `.claude/agents` output, and Codex custom

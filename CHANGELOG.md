@@ -6,6 +6,37 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-12
+
+**Codex tracer + runtime-safe Stop feedback.** Harness Kit can now be installed as
+a Codex plugin without loading the Claude Code-only protected-branch guard. The
+shared verification loop understands both runtimes while keeping their output
+contracts separate.
+
+### Added
+- `.codex-plugin/plugin.json` with shared skill discovery and an explicit Codex
+  lifecycle-hook path.
+- `adapters/codex/hooks.json` with a Stop-only adapter. It sets
+  `HARNESS_RUNTIME=codex` instead of guessing the runtime from overlapping payload
+  fields.
+- `.agents/plugins/marketplace.json` with a Git-backed repository-root source for
+  direct Codex marketplace installation.
+- Contract tests for Codex `cwd`, blocking continuation, `stop_hook_active` loop
+  prevention, non-blocking `systemMessage`, marketplace wiring, and CC output
+  preservation.
+
+### Fixed
+- `tests/detect_test.sh` no longer reports green when the blank-repository assertion
+  calls missing helpers; unexpected shell failures now stop the suite.
+- The shared Stop hook now honors `stop_hook_active` for both Claude Code and Codex,
+  preventing repeated continuation loops.
+
+### Verified scope
+- Live Codex CLI plugin installation and one blocking Stop continuation completed
+  successfully, including the configured verification command and loop termination.
+- Codex protected-branch `PreToolUse`, Codex custom-agent generation, and Codex-native
+  `introspect` output remain deferred.
+
 ## [0.6.1] - 2026-07-09
 
 **Version-manifest alignment.** The `v0.6.0` release tag was cut with
