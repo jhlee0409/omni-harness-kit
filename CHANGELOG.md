@@ -30,8 +30,12 @@ contracts separate.
 ### Fixed
 - `tests/detect_test.sh` no longer reports green when the blank-repository assertion
   calls missing helpers; unexpected shell failures now stop the suite.
-- The shared Stop hook now honors `stop_hook_active` for both Claude Code and Codex,
-  preventing repeated continuation loops.
+- **The shared Stop hook looped until the runtime's block cap.** Claude Code and
+  Codex re-fire Stop after a continuation with `stop_hook_active: true`; the hook
+  now stands down on that re-fire for both blocking and non-blocking paths.
+- **The Stop hook could hang on an unclosed stdin.** Input is now read only when a
+  payload can arrive and is bounded to two seconds. A TTY, malformed payload, or
+  inherited pipe that never closes degrades safely instead of hanging.
 
 ### Verified scope
 - Live Codex CLI plugin installation and one blocking Stop continuation completed

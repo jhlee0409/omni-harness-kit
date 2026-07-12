@@ -10,12 +10,21 @@
 set -uo pipefail
 [ "${HARNESS_VERIFY_OFF:-0}" = "1" ] && exit 0
 
-payload="$(cat 2>/dev/null || true)"
+# Stand down when we are the reason this turn exists.
+#
+# Emitting additionalContext (or decision=block) from a Stop hook CONTINUES the turn.
+# Claude Code and Codex re-fire this hook when the model next tries to stop, setting
+# stop_hook_active=true. The tree is still dirty, so an unguarded hook re-nudges —
+# forever. Nudge once per turn, then let the model stop.
+#
+# Read stdin only when a payload can actually arrive: a bare `cat` blocks forever if
+# stdin is a TTY or an inherited pipe nobody closes. No payload → treat as first fire.
+hook_input=""
+[ -t 0 ] || IFS= read -r -d '' -t 2 hook_input || true
 payload_cwd=""
-runtime="${HARNESS_RUNTIME:-claude}"
 stop_hook_active="false"
-if [ -n "$payload" ]; then
-  IFS=$'\x1f' read -r payload_cwd stop_hook_active < <(printf '%s' "$payload" | python3 -c '
+if [ -n "$hook_input" ]; then
+  IFS=$'\x1f' read -r payload_cwd stop_hook_active < <(printf '%s' "$hook_input" | python3 -c '
 import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}
@@ -28,6 +37,7 @@ print("\x1f".join([
 fi
 [ "$stop_hook_active" = "true" ] && exit 0
 
+runtime="${HARNESS_RUNTIME:-claude}"
 proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
 cfg="$proj/.claude/harness-kit.json"
 [ -f "$cfg" ] || exit 0   # only repos that ran introspect opt in
