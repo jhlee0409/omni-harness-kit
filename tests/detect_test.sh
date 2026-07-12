@@ -2,11 +2,13 @@
 # Self-contained tests for the introspect detection engine. Builds throwaway
 # fixtures in a temp dir, runs detect.sh, asserts the JSON output. No network,
 # no deps beyond bash + python3. Run: bash tests/detect_test.sh
-set -uo pipefail
+set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DETECT="$ROOT/skills/introspect/detect.sh"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 PASS=0; FAIL=0
+ok(){ echo "  PASS: $1"; PASS=$((PASS+1)); }
+no(){ echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
 
 # check <json> <python-index-expr> <expected-substring> <name>
 check() {
