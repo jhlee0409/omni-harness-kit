@@ -59,7 +59,10 @@ msg="harness-kit: changes present — verify before done with: ${cmd}"
 if [ "$blocking" = "true" ]; then
   python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
 elif [ "$runtime" = "codex" ]; then
-  python3 -c 'import json,sys;print(json.dumps({"systemMessage":sys.argv[1]}))' "$msg"
+  # Codex systemMessage is UI-only; it does not re-enter the model loop. A Stop
+  # decision=block is continuation feedback (not a rejected turn): Codex creates
+  # one follow-up prompt from reason, then stop_hook_active breaks the loop.
+  python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
 else
   # Non-blocking: surface via the documented Stop channel on STDOUT. A Stop hook's
   # stderr (and plain stdout) on exit 0 is DISCARDED by Claude Code — only

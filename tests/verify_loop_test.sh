@@ -100,12 +100,12 @@ payload="$(python3 -c 'import json,sys;print(json.dumps({"hook_event_name":"Stop
 out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR HARNESS_RUNTIME=codex bash "$HOOK" 2>&1)"
 [ -z "$out" ] && ok "Codex stop_hook_active prevents a second block" || no "Codex continuation looped (got: $out)"
 
-echo "[12] Codex non-blocking reminder → supported systemMessage output"
+echo "[12] Codex non-blocking reminder → Stop continuation decision"
 d="$TMP/p12"; mkproj "$d" '{"verify_command":"npm run check","blocking":false}' dirty
 payload="$(python3 -c 'import json,sys;print(json.dumps({"hook_event_name":"Stop","cwd":sys.argv[1],"stop_hook_active":False}))' "$d")"
 out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR HARNESS_RUNTIME=codex bash "$HOOK" 2>/dev/null)"
-echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);sys.exit(0 if "npm run check" in d.get("systemMessage","") and "decision" not in d else 1)' \
-  && ok "Codex non-blocking reminder uses systemMessage" || no "Codex non-blocking output used the wrong shape (got: $out)"
+echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);sys.exit(0 if d.get("decision")=="block" and "npm run check" in d.get("reason","") and "systemMessage" not in d else 1)' \
+  && ok "Codex non-blocking reminder continues the turn" || no "Codex non-blocking output did not continue the turn (got: $out)"
 
 echo "[13] Claude Code payload also has stop_hook_active → keep CC additionalContext"
 d="$TMP/p13"; mkproj "$d" '{"verify_command":"pytest","blocking":false}' dirty

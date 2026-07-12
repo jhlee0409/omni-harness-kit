@@ -21,8 +21,8 @@ contracts separate.
   fields.
 - `.agents/plugins/marketplace.json` with a Git-backed repository-root source for
   direct Codex marketplace installation.
-- Contract tests for Codex `cwd`, blocking continuation, `stop_hook_active` loop
-  prevention, non-blocking `systemMessage`, marketplace wiring, and CC output
+- Contract tests for Codex `cwd`, Stop continuation, `stop_hook_active` loop
+  prevention, marketplace wiring, and CC output
   preservation.
 - A model-free CI smoke that uses the real Codex CLI to ingest and install the
   packaged plugin into an isolated `CODEX_HOME`.
@@ -36,6 +36,9 @@ contracts separate.
 - **The Stop hook could hang on an unclosed stdin.** Input is now read only when a
   payload can arrive and is bounded to two seconds. A TTY, malformed payload, or
   inherited pipe that never closes degrades safely instead of hanging.
+- **Codex non-blocking reminders were UI-only and did not re-enter the model loop.**
+  Codex now uses the documented Stop `decision: block` continuation contract;
+  Claude Code keeps its non-blocking `additionalContext` contract.
 
 ### Verified scope
 - Live Codex CLI plugin installation and one blocking Stop continuation completed
