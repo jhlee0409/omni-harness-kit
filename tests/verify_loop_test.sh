@@ -122,6 +122,15 @@ out="$(printf '%s' "$payload" | CLAUDE_PROJECT_DIR="$env_d" HARNESS_RUNTIME=code
 echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);reason=d.get("reason","");sys.exit(0 if "VERIFY_PAYLOAD_REPO" in reason and "VERIFY_ENV_REPO" not in reason else 1)' \
   && ok "Codex payload cwd is authoritative" || no "Codex used inherited CLAUDE_PROJECT_DIR (got: $out)"
 
+echo "[15] Codex payload cwd may be a repo subdirectory → resolve root config and command"
+d="$TMP/p15"; mkproj "$d" '{"verify_command":"npm run check","blocking":false}' dirty
+mkdir -p "$d/apps/studio"
+payload="$(python3 -c 'import json,sys;print(json.dumps({"hook_event_name":"Stop","cwd":sys.argv[1],"stop_hook_active":False}))' "$d/apps/studio")"
+out="$(printf '%s' "$payload" | env -u CLAUDE_PROJECT_DIR HARNESS_RUNTIME=codex bash "$HOOK" 2>/dev/null)"
+root_d="$(git -C "$d" rev-parse --show-toplevel)"
+echo "$out" | python3 -c 'import json,sys;d=json.load(sys.stdin);reason=d.get("reason","");sys.exit(0 if "cd " + sys.argv[1] + " && npm run check" in reason else 1)' "$root_d" \
+  && ok "Codex subdirectory cwd resolves the repository root" || no "Codex subdirectory missed root config/command (got: $out)"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

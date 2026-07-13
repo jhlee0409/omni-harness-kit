@@ -78,7 +78,7 @@ claude = json.loads((root / ".claude-plugin/plugin.json").read_text())
 codex = json.loads((root / ".codex-plugin/plugin.json").read_text())
 changelog = (root / "CHANGELOG.md").read_text()
 assert claude["version"] == codex["version"] == "0.7.0"
-assert "## [0.7.0] - 2026-07-12" in changelog
+assert f"## [{claude['version']}] - " in changelog
 PY
 
 echo "[4] README install commands target the shipped Codex marketplace"
