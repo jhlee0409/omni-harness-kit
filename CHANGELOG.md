@@ -6,7 +6,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.7.0] - 2026-07-12
+## [0.7.0] - 2026-07-13
 
 **Codex tracer + runtime-safe Stop feedback.** Harness Kit can now be installed as
 a Codex plugin without loading the Claude Code-only protected-branch guard. The
@@ -39,6 +39,10 @@ contracts separate.
 - **Codex non-blocking reminders were UI-only and did not re-enter the model loop.**
   Codex now uses the documented Stop `decision: block` continuation contract;
   Claude Code keeps its non-blocking `additionalContext` contract.
+- **Sessions launched from a monorepo subdirectory missed the root Harness Kit
+  configuration and dirty state.** The shared Stop hook now resolves the git root
+  from the runtime-selected directory and reports a root-anchored verification
+  command for both Claude Code and Codex.
 
 ### Verified scope
 - Live Codex CLI plugin installation and one Stop continuation completed

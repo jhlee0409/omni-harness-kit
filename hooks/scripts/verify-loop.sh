@@ -41,10 +41,14 @@ runtime="${HARNESS_RUNTIME:-claude}"
 if [ "$runtime" = "codex" ]; then
   # Codex supplies the active project directory in the signed hook payload. Do
   # not let an inherited Claude Code environment point this hook at another repo.
-  proj="${payload_cwd:-$PWD}"
+  proj_start="${payload_cwd:-$PWD}"
 else
-  proj="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
+  proj_start="${CLAUDE_PROJECT_DIR:-${payload_cwd:-$PWD}}"
 fi
+# A runtime may launch from a monorepo subdirectory. Harness config, dirty state,
+# and relative verify commands are repository-root scoped.
+repo_root="$(git -C "$proj_start" rev-parse --show-toplevel 2>/dev/null || true)"
+proj="${repo_root:-$proj_start}"
 cfg="$proj/.claude/harness-kit.json"
 [ -f "$cfg" ] || exit 0   # only repos that ran introspect opt in
 
@@ -61,7 +65,8 @@ PY
 dirty="$(cd "$proj" 2>/dev/null && git status --porcelain 2>/dev/null | head -1)"
 [ -z "$dirty" ] && exit 0
 
-msg="harness-kit: changes present — verify before done with: ${cmd}"
+printf -v rooted_cmd 'cd %q && %s' "$proj" "$cmd"
+msg="harness-kit: changes present — verify before done with: ${rooted_cmd}"
 if [ "$blocking" = "true" ]; then
   python3 -c 'import json,sys;print(json.dumps({"decision":"block","reason":sys.argv[1]}))' "$msg"
 elif [ "$runtime" = "codex" ]; then
