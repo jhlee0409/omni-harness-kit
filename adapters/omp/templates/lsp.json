@@ -1,0 +1,22 @@
+{
+  "//": "Per-project LSP template — copy to <repo>/.omp/lsp.json. rootMarkers make a server eligible from the monorepo root AND resolve the nested project (include the nested manifest + a root marker like .git). Pin initOptions.tsserver.path only when the workspace toolchain is not found from the root. Replace the example sub-project paths with your repo's real ones.",
+  "servers": {
+    "typescript-language-server": {
+      "rootMarkers": ["tsconfig.json", "package.json", "apps/web/tsconfig.json", ".git"],
+      "initOptions": {
+        "tsserver": {
+          "path": "apps/web/node_modules/typescript/lib/tsserver.js"
+        }
+      }
+    },
+    "pyright": {
+      "rootMarkers": ["pyproject.toml", "services/api/pyproject.toml", ".git"]
+    },
+    "ruff": {
+      "rootMarkers": ["pyproject.toml", "services/api/pyproject.toml", ".git"]
+    },
+    "tailwindcss": {
+      "rootMarkers": ["tailwind.config.js", "tailwind.config.ts", "apps/web/package.json", ".git"]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# omp config template — copy to ~/.omp/agent/config.yml (global) or
+# <repo>/.omp/config.yml (per-project, only for what differs from global).
+# Set model IDs to what your provider account can serve — run `omp models` to
+# list the available IDs, then replace the <...> placeholders below.
+
+providers:
+  webSearch: auto            # pick an available web-search provider automatically
+
+modelRoles:
+  default: <your-strong-model>        # primary coding/reasoning model
+  smol: <your-cheap-fast-model>       # cheap, fast model for light turns
+  plan: <your-strong-model>           # planning (a higher thinking budget helps)
+  task: <your-mid-model>              # subagent workhorse
+  vision: <your-vision-model>         # image-capable model
+  advisor: <your-review-model>        # per-turn reviewer; cheap + reliable is fine
+  tiny: <your-cheap-fast-model>
+  commit: <your-cheap-fast-model>     # commit-message generation
+
+advisor:
+  enabled: true              # per-turn reviewer that catches false-completion
+  subagents: false           # true = also review subagent turns (costs more)
+  syncBacklog: "3"
+
+memory:
+  backend: local             # autonomous cross-session project memory
+
+autolearn:
+  enabled: true              # extract durable lessons from past sessions
+  autoContinue: false
+
+task:
+  enableLsp: true            # give subagents language-server intelligence
+
+retry:
+  fallbackChains:
+    default:
+      - <your-strong-model>
+      - <your-mid-model>
+
+secrets:
+  enabled: true              # mask secret env values from the model

@@ -1,0 +1,10 @@
+{
+  "//": "Per-project MCP template — copy to <repo>/.omp/mcp.json. Add only servers this repo needs beyond your global config (e.g. a database MCP for a data-heavy repo). Use disabledServers to suppress a server inherited from another source whose command can't resolve (harness-check.py flags unresolvable commands).",
+  "mcpServers": {
+    "example-db": {
+      "command": "npx",
+      "args": ["-y", "@example/mcp-server", "--readonly"]
+    }
+  },
+  "disabledServers": []
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "harness-kit-marketplace",
+  "owner": { "name": "Jack Lee", "url": "https://github.com/jhlee0409" },
+  "description": "Marketplace hosting Harness Kit — a portable, multi-runtime engineering harness (Claude Code, Codex, OpenCode, omp/oh-my-pi).",
+  "plugins": [
+    {
+      "name": "harness-kit",
+      "source": "./",
+      "description": "Portable engineering harness (plan → work → verify → feedback) + an introspect skill that tailors a repo's config to its stack. Agents, skills, and hooks for Claude Code / Codex / OpenCode."
+    },
+    {
+      "name": "harness-kit-omp",
+      "source": "./adapters/omp",
+      "description": "omp (oh-my-pi) target: an omp-native role/verify agent fleet, verification skills, TTSR render/backend guards, a deterministic harness-check audit device, and per-project setup templates (RULES / WATCHDOG / config / lsp / mcp)."
+    }
+  ]
+}

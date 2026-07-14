@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  Built for <b>Claude Code</b>, with experimental <b>Codex</b> and <b>OpenCode</b> adapters.
+  Built for <b>Claude Code</b>, with <b>Codex</b>, <b>OpenCode</b>, and <b>omp</b> (oh-my-pi) adapters.
 </p>
 
 It introspects your repo's tech stack and generates a harness tailored to it — a
@@ -43,6 +43,7 @@ discipline to *your* real commands.
 | **Stack-conditional critics** (generated) | `introspect` generates a `db-verify` critic **only when it detects a data layer** (tailored to the real store — MongoDB `$exists` / Postgres `information_schema` / MySQL / SQLite / Redis) and a `ui-verify` critic **only when it detects a frontend** (tailored to the real dev command). They need an external DB client / browser driver — the kit does **not** bundle those; introspect tells you the one command to add them, you install them. This is the introspect-first thesis applied to verification: ship the check tailored to *your* stack, not a generic one to every repo. |
 | `skills/introspect/render.sh` | **Deterministic renderer** for the three generated agent files (architect + the two conditional critics). Their slots are pure-data / table-lookup, so a script fills them — no LLM, no slot leak, fully tested. Shrinks the probabilistic surface to just the spine's judgment prose. |
 | `templates/` | The spine, architect, conditional-critic (db-verify / ui-verify), spec-triplet, and ADR templates the skills fill. |
+| [`adapters/omp/`](adapters/omp/) | **omp (oh-my-pi) target.** An omp-native role/verify agent fleet (18 agents), verification skills, TTSR render/backend guards, a deterministic `harness-check.py` audit device, a `project-onboarder` that tailors `<repo>/.omp/`, and per-project templates. See [`adapters/omp/README.md`](adapters/omp/README.md). |
 
 ## Install
 
@@ -93,6 +94,17 @@ Add to your project's `.opencode/` config or global `~/.config/opencode/opencode
 ```
 
 See [`adapters/opencode/README.md`](adapters/opencode/README.md) for details.
+
+### omp (oh-my-pi)
+
+```bash
+omp plugin marketplace add jhlee0409/omni-harness-kit
+omp plugin install harness-kit-omp@harness-kit-marketplace
+```
+
+omp gets its own native target — an agent fleet, verify skills, TTSR guards, a
+deterministic `harness-check` audit device, and a `project-onboarder` that tailors
+`<repo>/.omp/` to your stack. See [`adapters/omp/README.md`](adapters/omp/README.md).
 
 ## Use
 
