@@ -55,7 +55,7 @@ entry = marketplace["plugins"][0]
 assert entry["name"] == "harness-kit"
 assert entry["source"] == {
     "source": "url",
-    "url": "https://github.com/jhlee0409/claude-harness-kit.git",
+    "url": "https://github.com/jhlee0409/omni-harness-kit.git",
     "ref": "main",
 }
 assert entry["policy"] == {
@@ -89,7 +89,7 @@ import pathlib
 import sys
 
 readme = (pathlib.Path(sys.argv[1]) / "README.md").read_text()
-assert "codex plugin marketplace add jhlee0409/claude-harness-kit --ref main" in readme
+assert "codex plugin marketplace add jhlee0409/omni-harness-kit --ref main" in readme
 assert "codex plugin add harness-kit@harness-kit-codex" in readme
 assert "expose this checkout as `plugins/harness-kit`" not in readme
 PY

@@ -5,9 +5,9 @@
 <h1 align="center">Harness Kit</h1>
 
 <p align="center">
-  <a href="https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml"><img src="https://github.com/jhlee0409/claude-harness-kit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/jhlee0409/omni-harness-kit/actions/workflows/ci.yml"><img src="https://github.com/jhlee0409/omni-harness-kit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://github.com/jhlee0409/claude-harness-kit/releases"><img src="https://img.shields.io/github/v/release/jhlee0409/claude-harness-kit?sort=semver" alt="Release"></a>
+  <a href="https://github.com/jhlee0409/omni-harness-kit/releases"><img src="https://img.shields.io/github/v/release/jhlee0409/omni-harness-kit?sort=semver" alt="Release"></a>
 </p>
 
 <p align="center">
@@ -51,14 +51,14 @@ discipline to *your* real commands.
 
 ```bash
 # add this repo as a marketplace, then install the plugin
-/plugin marketplace add jhlee0409/claude-harness-kit
+/plugin marketplace add jhlee0409/omni-harness-kit
 /plugin install harness-kit@harness-kit-marketplace
 ```
 
 Local development (no install step):
 
 ```bash
-claude --plugin-dir /path/to/claude-harness-kit
+claude --plugin-dir /path/to/omni-harness-kit
 ```
 
 ### Codex (experimental tracer)
@@ -71,7 +71,7 @@ protected-branch `PreToolUse` guard.
 Add this repository as a Codex marketplace, then install the plugin:
 
 ```bash
-codex plugin marketplace add jhlee0409/claude-harness-kit --ref main
+codex plugin marketplace add jhlee0409/omni-harness-kit --ref main
 codex plugin add harness-kit@harness-kit-codex
 ```
 
@@ -89,7 +89,7 @@ Add to your project's `.opencode/` config or global `~/.config/opencode/opencode
 
 ```json
 {
-  "plugin": ["./path/to/claude-harness-kit/adapters/opencode/src/index.ts"]
+  "plugin": ["./path/to/omni-harness-kit/adapters/opencode/src/index.ts"]
 }
 ```
 
