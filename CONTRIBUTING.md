@@ -8,7 +8,7 @@ keep it small and sharp are the most welcome.
 Load the plugin into a Claude Code session without publishing:
 
 ```bash
-claude --plugin-dir /path/to/claude-harness-kit
+claude --plugin-dir /path/to/omni-harness-kit
 # then, in a target repo:
 /harness-kit:introspect
 ```

@@ -6,8 +6,8 @@
     "name": "Jack Lee",
     "url": "https://github.com/jhlee0409"
   },
-  "homepage": "https://github.com/jhlee0409/claude-harness-kit",
-  "repository": "https://github.com/jhlee0409/claude-harness-kit",
+  "homepage": "https://github.com/jhlee0409/omni-harness-kit",
+  "repository": "https://github.com/jhlee0409/omni-harness-kit",
   "license": "MIT",
   "keywords": [
     "claude-code",
@@ -29,7 +29,7 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/jhlee0409/claude-harness-kit",
+    "websiteURL": "https://github.com/jhlee0409/omni-harness-kit",
     "defaultPrompt": [
       "Inspect this repository and recommend the smallest useful harness.",
       "Use Harness Kit to implement this change with evidence."

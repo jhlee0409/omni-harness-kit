@@ -12,7 +12,7 @@ Add to your project's `.opencode/` config or global `~/.config/opencode/opencode
 
 ```json
 {
-  "plugin": ["~/client/claude-harness-kit/adapters/opencode/src/index.ts"]
+  "plugin": ["~/client/omni-harness-kit/adapters/opencode/src/index.ts"]
 }
 ```
 
@@ -78,7 +78,7 @@ The skill markdown files (`../../skills/*/SKILL.md`) are runtime-neutral. To use
 them with OpenCode, symlink or copy to `.opencode/skills/`:
 
 ```bash
-ln -s ~/client/claude-harness-kit/skills/* .opencode/skills/
+ln -s ~/client/omni-harness-kit/skills/* .opencode/skills/
 ```
 
 Agent definitions (critic fleet) differ per runtime:
