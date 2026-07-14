@@ -22,7 +22,7 @@
 
   <!-- wordmark + copy -->
   <text x="470" y="278" font-family="Helvetica, Arial, sans-serif" font-size="92" font-weight="bold" fill="#f8fafc">harness-kit</text>
-  <text x="474" y="334" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">Claude Code plugin · introspects your repo's stack</text>
+  <text x="474" y="334" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#94a3b8">Claude Code · Codex · OpenCode · omp</text>
   <text x="474" y="410" font-family="Helvetica, Arial, sans-serif" font-size="40" fill="#c4b5fd">Point it at any repo —</text>
   <text x="474" y="462" font-family="Helvetica, Arial, sans-serif" font-size="40" fill="#c4b5fd">get a harness tailored to its stack.</text>
 </svg>
