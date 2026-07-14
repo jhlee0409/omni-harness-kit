@@ -14,6 +14,7 @@ is unchanged.
 
 ```bash
 omp plugin marketplace add jhlee0409/omni-harness-kit
+omp plugin install harness-kit@harness-kit-marketplace       # base: the workflow skills the fleet autoloads (new-spec / tdd / adr)
 omp plugin install harness-kit-omp@harness-kit-marketplace
 ```
 
@@ -41,9 +42,12 @@ a real browser), `perf-checks` (Core Web Vitals → bundle → render → DB →
 `ui-verify-checks`, `chrome-verify-checks`, `db-verify-checks`.
 
 ### Rules (`rules/`) — TTSR
-Fire automatically on file edits: `verify-ui-render` (editing `*.tsx/jsx/vue/svelte`
-→ demand a real render probe), `verify-backend-trace` (editing adapters / services /
-api / `*.py` → demand a real API/DB trace).
+Two TTSR rule files. omp's native rule provider reads `<repo>/.omp/rules/`, not a
+plugin's install dir — so `project-onboarder` copies these into `<repo>/.omp/rules/`
+(or copy them yourself). Once in place they fire automatically on matching edits:
+`verify-ui-render` (editing `*.tsx/jsx/vue/svelte` → demand a real render probe) and
+`verify-backend-trace` (editing adapters / services / api / `*.py` → demand a real
+API/DB trace).
 
 ### Engine (`scripts/harness-check.py`)
 A deterministic, dependency-light audit device. In one pass it validates every

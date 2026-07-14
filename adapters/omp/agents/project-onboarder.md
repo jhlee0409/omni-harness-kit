@@ -60,7 +60,10 @@ root without manual per-file fiddling.
      repo). Skip what the global config already covers.
    - **`config.yml`** — ONLY if the repo genuinely needs different
      models/approvals/compaction than global; otherwise omit.
-   - **`rules/*.md`** — repo-specific TTSR guards if a real failure class warrants it.
+   - **`rules/*.md`** — repo-specific TTSR guards if a real failure class warrants
+     it; also copy the kit's shipped `verify-ui-render` / `verify-backend-trace`
+     rules here, since omp's native rule provider reads `<repo>/.omp/rules/` (not a
+     plugin's install dir).
    - **Context-file bridge** — for every bare `CLAUDE.md` omp would miss (flagged
      above), make it discoverable WITHOUT touching the team file or duplicating
      content: write `<dir>/.omp/AGENTS.md` containing a single `@CLAUDE.md` import

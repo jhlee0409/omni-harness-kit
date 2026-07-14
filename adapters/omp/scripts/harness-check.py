@@ -100,9 +100,11 @@ GRN.append(f"rules: {len(glob.glob(H('~/.omp/agent/rules/*.md')))}")
 # ---------- 4. config + model resolvability ----------
 cfg = H("~/.omp/agent/config.yml")
 if os.path.exists(cfg):
-    try:
-        import yaml; yaml.safe_load(open(cfg)); GRN.append("config.yml: valid YAML")
-    except Exception as e: RED.append(f"config.yml invalid: {e}")
+    try: import yaml
+    except Exception: YEL.append("config.yml: PyYAML not installed — YAML validation skipped")
+    else:
+        try: yaml.safe_load(open(cfg)); GRN.append("config.yml: valid YAML")
+        except Exception as e: RED.append(f"config.yml invalid: {e}")
 models_out = sh("omp models")
 avail = set(re.findall(r"^\s*│?\s*([a-z0-9][a-z0-9.\-]+)\s*│", models_out, re.M))
 prov = set(re.findall(r"^([a-z0-9\-]+) \(\d+\)", models_out, re.M))

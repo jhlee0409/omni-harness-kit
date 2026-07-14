@@ -129,6 +129,7 @@ claude --plugin-dir /path/to/omni-harness-kit
 
 ```bash
 omp plugin marketplace add jhlee0409/omni-harness-kit
+omp plugin install harness-kit@harness-kit-marketplace       # base: workflow skills the fleet autoloads
 omp plugin install harness-kit-omp@harness-kit-marketplace
 ```
 

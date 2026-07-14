@@ -1,6 +1,6 @@
 ---
 description: Force render verification when editing UI files — auto-fires (no skill naming needed)
-condition: ["*.tsx", "*.jsx", "*.vue", "*.svelte"]
+condition: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte"]
 interruptMode: prose-only
 ---
 A UI component was edited. Before claiming "fixed / it renders / not broken":

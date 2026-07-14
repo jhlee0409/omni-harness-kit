@@ -1,6 +1,6 @@
 ---
 description: Force a real trace when editing backend/adapter/service code — auto-fires
-condition: ["**/adapters/**", "**/services/**", "**/api/**", "*.py"]
+condition: ["**/adapters/**", "**/services/**", "**/api/**", "**/*.py"]
 interruptMode: prose-only
 ---
 Backend / adapter / service code was edited. Before claiming "works / done"
