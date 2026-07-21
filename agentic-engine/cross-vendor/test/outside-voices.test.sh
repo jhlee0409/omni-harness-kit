@@ -76,12 +76,16 @@ echo "[1] OUTSIDE_VOICES_OFF=1"
   OUTSIDE_VOICES_OFF=1 run bash "$CORE_SCRIPT" "test prompt"
   assert_exit 0 "$RUN_RC" "kill switch exits 0"
 
-# 2. Missing CLI — restrict PATH so real codex/gemini/agy aren't found
+# 2. Missing CLI — point PATH at a mock-FREE dir so the vendor CLI is genuinely absent
+# (the old test left MOCK_DIR on PATH, so codex was actually present; it only "passed"
+# on platforms lacking `timeout`, where every vendor died anyway — it failed on CI).
 echo "[2] Missing CLI"
+  EMPTY_BIN="$(mktemp -d)"
   SAVED_PATH="$PATH"
-  export PATH="$MOCK_DIR:/usr/bin:/bin"
+  export PATH="$EMPTY_BIN:/usr/bin:/bin"
   OUTSIDE_VOICES_VENDORS="codex" run bash "$CORE_SCRIPT" "test"
   export PATH="$SAVED_PATH"
+  rm -rf "$EMPTY_BIN"
   assert_exit 1 "$RUN_RC" "missing CLI exits 1"
   assert_contains "$RUN_OUTPUT" "not found" "error mentions missing CLI"
 
