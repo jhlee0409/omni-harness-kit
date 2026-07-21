@@ -39,10 +39,14 @@ import sys
 
 result = json.loads(pathlib.Path(sys.argv[1]).read_text())
 installed = pathlib.Path(result["installedPath"])
+manifest = installed / ".codex-plugin/plugin.json"
+# Release-agnostic: assert the installed version matches the manifest (no hardcoded
+# number to edit every bump), and the Stop-adapter files are present.
 assert result["pluginId"] == "harness-kit@harness-kit-ci"
-assert result["version"] == "0.7.0"
-assert (installed / ".codex-plugin/plugin.json").is_file()
+assert manifest.is_file()
+expected = json.loads(manifest.read_text())["version"]
+assert result["version"] == expected, f"install reported {result['version']} != manifest {expected}"
 assert (installed / "adapters/codex/hooks.json").is_file()
 assert (installed / "hooks/scripts/verify-loop.sh").is_file()
-print("Codex install smoke: harness-kit@0.7.0 installed with Stop adapter")
+print(f"Codex install smoke: harness-kit@{expected} installed with Stop adapter")
 PY
