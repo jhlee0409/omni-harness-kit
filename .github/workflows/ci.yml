@@ -15,6 +15,10 @@ jobs:
         with:
           node-version: 20
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Shell syntax + lint
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
@@ -26,6 +30,14 @@ jobs:
       - name: Tests (detection, verify-loop, guard, update-block)
         run: |
           for t in tests/*_test.sh; do echo "== $t =="; bash "$t"; done
+
+      - name: Engine + adapter unit tests (bun)
+        run: |
+          for m in rag-feedback intent-router verify-evidence; do
+            echo "== agentic-engine/$m =="; ( cd "agentic-engine/$m" && bun test )
+          done
+          echo "== agentic-engine/cross-vendor =="; bash agentic-engine/cross-vendor/test/outside-voices.test.sh
+          echo "== adapters/opencode =="; ( cd adapters/opencode && bun install && bun test && bun run typecheck )
 
       - name: Codex plugin install smoke (model-free)
         run: |

@@ -186,5 +186,7 @@ if leaks:
     sys.stderr.write("render: ERROR — unfilled slot(s) in: %s\n" % ", ".join(leaks))
     sys.exit(2)
 
+for _w in detect.get("warnings", []) or []:
+    sys.stderr.write("detect: ⚠ %s\n" % _w)
 print("render: wrote %s to %s" % (", ".join(generated) or "(nothing)", out_dir))
 PY

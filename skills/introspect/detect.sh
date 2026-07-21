@@ -18,6 +18,10 @@ command -v python3 >/dev/null 2>&1 || { echo '{"error":"python3 not found"}'; ex
 ROOT="$(pwd)"
 
 log() { printf '%s\n' "$*" >&2; }
+US=$'\x1f'
+# Record a non-fatal detection gap so it reaches the user instead of silently
+# degrading the generated harness. Fail-soft stays fail-soft — this only adds signal.
+warn() { warnings="${warnings:+$warnings$US}$1"; log "  ⚠ $1"; }
 
 # --- L4: what is installed on the machine (declared-vs-installed split) ---
 installed() { command -v "$1" >/dev/null 2>&1 && echo "$1"; }
@@ -26,6 +30,7 @@ INSTALLED="$(for b in node npm pnpm yarn bun python3 go cargo deno; do installed
 languages=""; frameworks=""; test_runner=""; test_cmd=""; build_cmd=""; dev_cmd=""
 pkg_manager=""; monorepo="false"; data_layer=""; project_name=""
 typecheck_cmd=""; lint_cmd=""
+warnings=""
 
 # Append $val to the comma-list named by $var. NO eval — $val is attacker-controlled
 # (it carries directory names from `find` on an untrusted target repo). printf '%s'
@@ -107,6 +112,11 @@ PY
       *" @biomejs/biome "*) lint_cmd="biome check" ;;
     esac
   fi
+fi
+# A present-but-unparseable package.json fell through to empty name/scripts/deps above.
+# Say so, rather than emitting a quietly degraded harness that looks fully detected.
+if [ -f package.json ] && ! python3 -c 'import json,sys;json.load(open("package.json"))' 2>/dev/null; then
+  warn "package.json is present but not valid JSON — name/scripts/deps were skipped"
 fi
 
 # --- Python ---
@@ -198,33 +208,38 @@ fi
 # setup.py / setup.cfg were missing → Python sub-packages were invisible). D7: map each
 # manifest to its dir and `sort -u` so a dir with two manifests is not listed twice.
 members=""
-while IFS= read -r d; do
-  add members "$d"
-done < <(find . -maxdepth 3 \
+_member_scan="$(find . -maxdepth 3 \
           \( -name node_modules -o -name .git -o -name dist -o -name build -o -name .venv \
              -o -name .next -o -name coverage -o -name .turbo -o -name out \) -prune -o \
           \( -name package.json -o -name pyproject.toml -o -name go.mod -o -name Cargo.toml \
              -o -name requirements.txt -o -name setup.py -o -name setup.cfg \
              -o -name Gemfile -o -name pom.xml -o -name build.gradle -o -name build.gradle.kts \) -print 2>/dev/null \
           | grep -vE '^\./(package\.json|pyproject\.toml|go\.mod|Cargo\.toml|requirements\.txt|setup\.py|setup\.cfg|Gemfile|pom\.xml|build\.gradle|build\.gradle\.kts)$' \
-          | sed 's#/[^/]*$##; s#^\./##' | sort -u | head -20)
+          | sed 's#/[^/]*$##; s#^\./##' | sort -u)"
+_member_total="$(printf '%s' "$_member_scan" | grep -c '[^[:space:]]' || true)"
+while IFS= read -r d; do
+  [ -n "$d" ] && add members "$d"
+done < <(printf '%s\n' "$_member_scan" | head -20)
+[ "${_member_total:-0}" -gt 20 ] && warn "monorepo has $_member_total member manifests (depth<=3); only the first 20 are listed"
 if [ -f pnpm-workspace.yaml ] || [ -f turbo.json ] || [ -f lerna.json ] \
    || grep -qs '"workspaces"' package.json 2>/dev/null || [ -n "$members" ]; then
   monorepo="true"
 fi
 
 [ -z "$project_name" ] && project_name="$(basename "$ROOT")"
+[ -z "$languages" ] && warn "no recognized stack manifest found — generated harness is the universal spine; re-run introspect after adding a stack"
 
 # --- emit ---
 python3 - "$project_name" "$languages" "$frameworks" "$test_runner" "$test_cmd" \
   "$typecheck_cmd" "$lint_cmd" "$build_cmd" "$dev_cmd" "$pkg_manager" "$monorepo" \
-  "$data_layer" "$members" "$INSTALLED" "$ROOT" <<'PY'
+  "$data_layer" "$members" "$INSTALLED" "$ROOT" "$warnings" <<'PY'
 import json,sys
-k=["project_name","languages","frameworks","test_runner","test_cmd","typecheck_cmd","lint_cmd","build_cmd","dev_cmd","package_manager","monorepo","data_layer","members","installed","root"]
+k=["project_name","languages","frameworks","test_runner","test_cmd","typecheck_cmd","lint_cmd","build_cmd","dev_cmd","package_manager","monorepo","data_layer","members","installed","root","warnings"]
 v=sys.argv[1:]
 lists=("languages","frameworks","data_layer","members")
 o={key:(val.split(",") if key in lists and val else ([] if key in lists else (val=="true" if key=="monorepo" else val))) for key,val in zip(k,v)}
 o["installed"]=o["installed"].split() if o["installed"] else []
+o["warnings"]=o["warnings"].split("\x1f") if o.get("warnings") else []
 print(json.dumps(o,indent=2))
 PY
 

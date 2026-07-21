@@ -36,12 +36,32 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **The OpenCode branch guard carried the identical substring bug.**
   `adapters/opencode/src/git.ts` `isGitMutation` used `cmd.includes("git commit")`; it
   now uses the same subcommand-aware match as the CC guard.
+- **`update-block.sh` wrote `CLAUDE.md` non-atomically.** An interruption mid-write
+  could truncate the user's file. It now writes to a temp file in the same directory
+  and `os.replace`s it into place (atomic on POSIX).
 
 ### Added
 - Regression tests for the fixes above: multi-store and duplicate-store `db-verify`
   (`render_test.sh`), guard look-alike vs real-invocation cases (`guard_test.sh`), a
   non-ASCII slug (`spec_test.sh`), and `isGitMutation` subcommand cases
   (OpenCode `dogfood.test.ts`).
+- **Deterministic offline embedding provider (`local`, alias `hash`).** Feature-hashing
+  over unicode tokens — no API key, no network — selectable with
+  `HARNESS_EMBEDDING_PROVIDER=local`. Gives the portable kit a real zero-dependency
+  fallback for rag-feedback / intent-router, and makes their retrieval/routing pipeline
+  self-testable in CI without a live model.
+- **CI now runs the engine and adapter test suites it previously skipped.** The
+  `agentic-engine` bun suites (rag-feedback, intent-router, verify-evidence),
+  cross-vendor's shell test, and the OpenCode adapter tests + typecheck existed but CI
+  ran only the top-level `tests/*_test.sh`. A Bun toolchain step plus a new integration
+  test (`tests/agentic_adapters_test.sh`, skips where Bun is absent) exercise the three
+  Claude Code hook adapters end-to-end with the deterministic `local` provider — the
+  layer the bun unit suites (which cover `src/` only) never touched.
+- **`detect.sh` surfaces a `warnings[]` channel.** Partial/failed detection was silent
+  (a `set -u` but not `-e` script fails soft to empty), so a malformed `package.json`,
+  a monorepo whose member list hit the depth-3/20 cap, or a stackless repo produced a
+  quietly degraded harness that looked fully detected. Those now emit a warning in the
+  JSON summary and on stderr (surfaced by `render.sh`).
 
 ### Documentation
 - Corrected the `harness-kit.json` precedence claim: `env override > file > default`

@@ -4,6 +4,7 @@ import { readCache, writeCache, indexById } from "./store.ts";
 import { openaiProvider } from "./providers/openai.ts";
 import { googleProvider } from "./providers/google.ts";
 import { ollamaProvider } from "./providers/ollama.ts";
+import { localProvider } from "./providers/local.ts";
 
 const DEFAULT_K = 3;
 const CACHE_FILE = ".harness-cache/feedback-vectors.json";
@@ -14,6 +15,8 @@ export function createProvider(): EmbeddingProvider {
     case "openai":  return openaiProvider;
     case "google":  return googleProvider;
     case "ollama":  return ollamaProvider;
+    case "local":
+    case "hash":    return localProvider;
     default:
       throw new Error(`Unknown embedding provider: ${choice}`);
   }

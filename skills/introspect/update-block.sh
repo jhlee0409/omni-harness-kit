@@ -11,7 +11,7 @@ file="$1"; start="$2"; end="$3"
 new="$(cat)"
 
 python3 - "$file" "$start" "$end" "$new" <<'PY'
-import sys
+import sys, os, tempfile
 file, start, end, new = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 try:
     txt = open(file).read()
@@ -33,5 +33,16 @@ else:
     txt += new                                # append new block
 if not txt.endswith("\n"):
     txt += "\n"
-open(file, "w").write(txt)
+# Atomic write — temp in the same dir + os.replace so an interruption can never leave
+# the user's file (often CLAUDE.md) truncated. os.replace is atomic on POSIX.
+d = os.path.dirname(os.path.abspath(file)) or "."
+fd, tmp = tempfile.mkstemp(dir=d, prefix=".update-block.")
+try:
+    with os.fdopen(fd, "w") as f:
+        f.write(txt)
+    os.replace(tmp, file)
+except BaseException:
+    try: os.unlink(tmp)
+    except OSError: pass
+    raise
 PY

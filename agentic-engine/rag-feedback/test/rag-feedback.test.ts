@@ -13,6 +13,7 @@ import type { EmbeddingProvider, VectorEntry } from "../src/types.ts";
 import { cosineSimilarity, contentHash } from "../src/similarity.ts";
 import { readCache, writeCache, indexById } from "../src/store.ts";
 import { createRetriever } from "../src/index.ts";
+import { localProvider } from "../src/providers/local.ts";
 
 // ─── Mock embedding provider ──────────────────────────────
 
@@ -255,5 +256,34 @@ describe("createProvider", () => {
     const { createProvider } = require("../src/index.ts");
     expect(() => createProvider()).toThrow("Unknown embedding provider");
     delete process.env.HARNESS_EMBEDDING_PROVIDER;
+  });
+});
+
+describe("localProvider (deterministic offline embedding)", () => {
+  it("is deterministic and L2-normalized", async () => {
+    const a = await localProvider.embed("verify the live schedule");
+    const b = await localProvider.embed("verify the live schedule");
+    expect(a).toEqual(b);
+    expect(a.length).toBe(localProvider.dim);
+    const norm = Math.sqrt(a.reduce((s, x) => s + x * x, 0));
+    expect(norm).toBeCloseTo(1, 6);
+  });
+
+  it("scores shared terms higher than disjoint terms", async () => {
+    const q = await localProvider.embed("verify the live broadcast schedule");
+    const near = await localProvider.embed("check the live broadcast schedule now");
+    const far = await localProvider.embed("compile rust binaries for release");
+    expect(cosineSimilarity(q, near)).toBeGreaterThan(cosineSimilarity(q, far));
+  });
+
+  it("handles token-less input without NaN", async () => {
+    const v = await localProvider.embed("!!! ??? ...");
+    expect(v.every((x) => Number.isFinite(x))).toBe(true);
+    expect(cosineSimilarity(v, await localProvider.embed("anything"))).toBe(0);
+  });
+
+  it("batch matches single", async () => {
+    const [x] = await localProvider.embedBatch(["hello world"]);
+    expect(x).toEqual(await localProvider.embed("hello world"));
   });
 });
