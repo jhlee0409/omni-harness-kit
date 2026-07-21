@@ -7,14 +7,20 @@
 # its judgment slots (architecture note, stack prose) for the LLM — that is the
 # irreducible probabilistic residue; this shrinks the residue to it.
 #
-# Usage: render.sh <target-dir> [--out <dir>]   (default out: <target>/.claude/agents)
+# Usage: render.sh <target-dir> [--out <dir> | --members]
+#   --members: after the root, render each monorepo member the root scan named into its
+#   own <member>/.claude/agents (a member's OWN detection drives its architect/critics).
 # Reads configs statically via detect.sh (no eval, no target-code execution).
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$HERE/../.." && pwd)}"
 TARGET="${1:?usage: render.sh <target-dir> [--out <dir>]}"
 OUT="$TARGET/.claude/agents"
-[ "${2:-}" = "--out" ] && OUT="${3:?--out needs a dir}"
+MEMBERS=0
+case "${2:-}" in
+  --out)     OUT="${3:?--out needs a dir}" ;;
+  --members) MEMBERS=1 ;;
+esac
 
 # Pass the detect JSON via a temp file, not stdin — stdin is the python heredoc script.
 json_file="$(mktemp)"
@@ -190,3 +196,14 @@ for _w in detect.get("warnings", []) or []:
     sys.stderr.write("detect: ⚠ %s\n" % _w)
 print("render: wrote %s to %s" % (", ".join(generated) or "(nothing)", out_dir))
 PY
+
+# --members: the root scan NAMES a monorepo's members but the root render only covers the
+# root stack. Render each member as its own single target (into <member>/.claude/agents),
+# so a per-package harness exists where members are worked as their own root. One level
+# deep; each member's OWN detection drives its architect + conditional critics.
+if [ "$MEMBERS" = 1 ]; then
+  while IFS= read -r m; do
+    { [ -n "$m" ] && [ -d "$TARGET/$m" ]; } || continue
+    bash "$0" "$TARGET/$m" 2>&1 | sed "s#^#  [$m] #" || true
+  done < <(python3 -c 'import json,sys;print("\n".join(json.load(open(sys.argv[1])).get("members",[])))' "$json_file")
+fi

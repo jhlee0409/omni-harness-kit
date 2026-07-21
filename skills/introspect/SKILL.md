@@ -98,10 +98,14 @@ any locale — handle these before the normal path):
     critic (§4 step 2) tailored to the detected store, and list it in the spine
     `## Critics`. It needs the store's client, which the kit does NOT bundle —
     surface the setup as guidance in §5.
-  - monorepo → **re-run `detect.sh` against each `members[]` dir** (the root scan
-    only NAMES members, it does not detect their stacks), then generate one
-    sub-context `CLAUDE.md` stub + the per-member conditional critics from each
-    member's OWN detection, plus a note that sub-context CLAUDE.md wins on conflict.
+  - monorepo → run **`render.sh <target> --members`**: the root scan only NAMES members
+    and the default render covers only the root stack, so `--members` renders each
+    member's OWN `<stack>-architect` + conditional critics into its
+    `<member>/.claude/agents` (deterministic, driven by that member's own detection).
+    Then hand-write one sub-context `CLAUDE.md` stub per active member with a note that
+    the sub-context wins on conflict. (A member's `.claude/agents` is auto-loaded only
+    when that member is opened as the working root — the norm for per-package monorepo
+    work; the root harness still covers the root stack.)
 - **Tier 3 — none.** Harness Kit ships NO measurement / self-evolving / memory
   subsystem (deliberately cut as too heavy). Reliability comes from the discipline
   + independent critics above, not metrics. Do NOT generate, mention, or promise a

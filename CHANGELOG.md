@@ -77,6 +77,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   any disagreement (Codex is asserted as a deliberate no-guard non-participant). The
   previously duplicated per-runtime classification cases (in `guard_test.sh` and the
   OpenCode `dogfood.test.ts`) were folded into this single source of truth.
+- **Monorepo per-member harness generation (`render.sh <target> --members`).** The root
+  scan already NAMED a monorepo's members, but only the root stack was rendered — a
+  polyglot repo left every sub-package without a tailored architect/critics. `--members`
+  now renders each member's OWN `<stack>-architect` and conditional `db-verify`/`ui-verify`
+  into its `<member>/.claude/agents`, driven by that member's own detection (one level
+  deep, deterministic). The introspect skill invokes it for monorepos; a member's agents
+  load when that member is opened as the working root (the norm for per-package work).
 
 ### Documentation
 - Corrected the `harness-kit.json` precedence claim: `env override > file > default`

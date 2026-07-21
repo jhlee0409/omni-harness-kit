@@ -129,6 +129,17 @@ printf 'datasource db { provider = "mongodb" }\n' > "$TMP/dup/prisma/schema.pris
 [ "$(render dup)" = "0" ] && ok "render exits 0" || no "render failed"
 body dup db-verify.md | grep -qF 'MongoDB + MongoDB' && no "store rendered twice (not deduped)" || ok "duplicate store deduped"
 
+echo "[15] --members renders each monorepo member into its own .claude/agents"
+m="$TMP/mono"; mkdir -p "$m/apps/web" "$m/services/api"
+printf '{"name":"mono","workspaces":["apps/*","services/*"],"dependencies":{}}' > "$m/package.json"; : > "$m/package-lock.json"
+printf '{"name":"web","dependencies":{"react":"^19","next":"^15"},"scripts":{"dev":"next dev"}}' > "$m/apps/web/package.json"; : > "$m/apps/web/package-lock.json"
+printf '[project]\nname="api"\ndependencies=["fastapi","pytest","motor"]\n' > "$m/services/api/pyproject.toml"
+bash "$RENDER" "$m" --members >/dev/null 2>&1
+[ -f "$m/.claude/agents/node-architect.md" ] && ok "root architect rendered" || no "no root architect"
+[ -f "$m/apps/web/.claude/agents/ui-verify.md" ] && ok "member apps/web got ui-verify (own frontend)" || no "no member ui-verify"
+[ -f "$m/services/api/.claude/agents/python-architect.md" ] && ok "member services/api got python-architect (own stack)" || no "no member architect"
+grep -qF '$exists' "$m/services/api/.claude/agents/db-verify.md" 2>/dev/null && ok "member db-verify uses its own store idiom (MongoDB)" || no "member db-verify missing/wrong store"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
