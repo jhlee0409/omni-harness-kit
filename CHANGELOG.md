@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-21
+
 ### Fixed
 - **`db-verify` covered only the first detected data store.** Detection is additive
   (a repo can report `mongodb` + `postgres` + `redis`), but the renderer used
@@ -509,6 +511,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.8.0]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.8.0
 [0.5.2]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.5.0

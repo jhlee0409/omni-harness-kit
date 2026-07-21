@@ -65,7 +65,7 @@ assert entry["policy"] == {
 assert entry["category"] == "Productivity"
 PY
 
-echo "[3] Claude and Codex manifests publish the same 0.7.0 release"
+echo "[3] Claude and Codex manifests publish the same, CHANGELOG-backed release"
 python3 - "$ROOT" <<'PY' \
   && ok "runtime manifests and CHANGELOG share one release version" \
   || no "runtime manifest release versions drifted"
@@ -77,8 +77,10 @@ root = pathlib.Path(sys.argv[1])
 claude = json.loads((root / ".claude-plugin/plugin.json").read_text())
 codex = json.loads((root / ".codex-plugin/plugin.json").read_text())
 changelog = (root / "CHANGELOG.md").read_text()
-assert claude["version"] == codex["version"] == "0.7.0"
-assert f"## [{claude['version']}] - " in changelog
+# Release-agnostic: the two runtime manifests must agree, and the version must have a
+# dated CHANGELOG section (no hardcoded number to edit every bump).
+assert claude["version"] == codex["version"], "runtime manifest versions drifted"
+assert f"## [{claude['version']}] - " in changelog, "no dated CHANGELOG section for the release version"
 PY
 
 echo "[4] README install commands target the shipped Codex marketplace"

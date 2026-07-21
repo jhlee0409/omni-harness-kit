@@ -1,6 +1,6 @@
 {
   "name": "harness-kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A portable engineering harness for Claude Code and Codex with reusable skills and verification hooks.",
   "author": {
     "name": "Jack Lee",
