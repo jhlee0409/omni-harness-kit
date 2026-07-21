@@ -287,3 +287,46 @@ describe("localProvider (deterministic offline embedding)", () => {
     expect(x).toEqual(await localProvider.embed("hello world"));
   });
 });
+
+describe("evidence ingestion (verify→feedback loop)", () => {
+  it("indexes evidence.jsonl records and retrieves them", async () => {
+    const proj = await mkdtemp(join(tmpdir(), "rag-ev-"));
+    try {
+      await mkdir(join(proj, ".harness-kit"), { recursive: true });
+      const rec = JSON.stringify({
+        agent: "claim-checker",
+        claim: "counts match the real store",
+        evidence: "SELECT count(*) -> 42",
+        timestamp: 111,
+      });
+      await writeFile(join(proj, ".harness-kit", "evidence.jsonl"), rec + "\n");
+      const r = createRetriever(proj, localProvider);
+      await r.index(join(proj, "nonexistent-feedback")); // no feedback dir → evidence only
+      const hits = await r.retrieve("do the counts match the store", 3);
+      expect(hits.length).toBeGreaterThan(0);
+      expect(hits[0].id.startsWith("evidence:")).toBe(true);
+      expect(hits[0].content).toContain("counts match the real store");
+    } finally {
+      await rm(proj, { recursive: true, force: true });
+    }
+  });
+
+  it("respects HARNESS_RAG_EVIDENCE_OFF=1", async () => {
+    const proj = await mkdtemp(join(tmpdir(), "rag-ev-off-"));
+    try {
+      await mkdir(join(proj, ".harness-kit"), { recursive: true });
+      await writeFile(
+        join(proj, ".harness-kit", "evidence.jsonl"),
+        JSON.stringify({ agent: "claim-checker", claim: "unique refuted claim", timestamp: 1 }) + "\n",
+      );
+      process.env.HARNESS_RAG_EVIDENCE_OFF = "1";
+      const r = createRetriever(proj, localProvider);
+      await r.index(join(proj, "nofeedback"));
+      const hits = await r.retrieve("unique refuted claim", 3);
+      expect(hits.length).toBe(0);
+    } finally {
+      delete process.env.HARNESS_RAG_EVIDENCE_OFF;
+      await rm(proj, { recursive: true, force: true });
+    }
+  });
+});

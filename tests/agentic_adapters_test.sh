@@ -50,6 +50,12 @@ echo "[4] adapters stand down cleanly (valid empty JSON) when CLAUDE_PLUGIN_ROOT
 out="$(cd "$consumer" && printf '{"prompt":"anything"}' | HARNESS_EMBEDDING_PROVIDER=local bash "$INTENT" 2>/dev/null)"
 [ "$out" = '{"additionalContext":""}' ] && ok "stands down without PLUGIN_ROOT" || no "bad stand-down ($out)"
 
+echo "[5] rag-feedback surfaces past verification evidence (the verify→feedback loop)"
+# evidence.jsonl was written by [3]; a related query should now retrieve it.
+out="$(run_adapter "$RAG" '{"prompt":"do the counts match the real store"}')"
+printf '%s' "$out" | grep -q 'verification evidence' && printf '%s' "$out" | grep -q 'counts match the real store' \
+  && ok "past evidence retrieved as memory" || no "evidence not surfaced ($out)"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

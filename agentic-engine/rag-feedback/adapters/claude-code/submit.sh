@@ -36,7 +36,10 @@ fi
 PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 FEEDBACK_DIR="${HARNESS_FEEDBACK_DIR:-$PROJECT_DIR/.claude/feedback}"
 
-if [[ ! -d "$FEEDBACK_DIR" ]]; then
+# Retrieve when there is anything to retrieve FROM: curated feedback memories and/or
+# the past-session verification-evidence log (the verify→feedback loop). Stand down
+# only when neither exists.
+if [[ ! -d "$FEEDBACK_DIR" && ! -f "$PROJECT_DIR/.harness-kit/evidence.jsonl" ]]; then
   echo '{"additionalContext":""}'
   exit 0
 fi

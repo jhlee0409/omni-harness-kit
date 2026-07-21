@@ -1,20 +1,25 @@
 # RAG Feedback Retrieval
 
-Cross-session learning — semantically retrieves relevant past feedback/lessons
-and injects them into the current context.
+Cross-session learning — semantically retrieves relevant past lessons AND past
+verification outcomes, and injects them into the current context.
 
 ## Status: IMPLEMENTED (v0.1.0)
 
 Core retriever + 3 embedding providers + CC adapter are written and tested
-(20 unit tests, all pass). OC adapter has a known limitation (see below).
+(26 unit tests, all pass). OC adapter has a known limitation (see below).
 
 ## How it works
 
-1. Feedback memories are stored as markdown files (`feedback/*.md`)
-2. On first run, each file is embedded (API or local) and cached as JSON
-3. On each user message, the message is embedded and the top-k matching
-   feedback memories are retrieved (cosine similarity)
-4. Retrieved memories are injected into the system prompt
+1. Memories come from two sources: curated markdown lessons (`feedback/*.md`) and the
+   past-session verification log that verify-evidence writes
+   (`.harness-kit/evidence.jsonl`) — so what a critic already proved or refuted becomes
+   retrievable, closing the verify→feedback loop. (Read decoupled, by the JSONL's public
+   shape; no import of the verify-evidence module. Bounded to the most recent 50 entries.)
+2. On first run each memory is embedded (API or the offline `local` provider) and cached
+   as JSON; only new/changed entries are re-embedded (djb2 content hash).
+3. On each user message the message is embedded and the top-k matching memories are
+   retrieved (cosine similarity).
+4. Retrieved memories are injected into the context as `additionalContext`.
 
 ## Usage (programmatic)
 
@@ -49,7 +54,7 @@ Config (`.claude/harness-kit.json`):
 { "feedback_dir": ".claude/feedback", "embedding_provider": "openai" }
 ```
 
-Kill switch: `HARNESS_RAG_OFF=1`
+Kill switches: `HARNESS_RAG_OFF=1` (all), `HARNESS_RAG_EVIDENCE_OFF=1` (evidence only).
 
 ## Interface
 
@@ -73,6 +78,7 @@ interface FeedbackMemory {
 | OpenAI (default) | text-embedding-3-small | 1536 | `OPENAI_API_KEY` | Cloud |
 | Google | text-embedding-004 | 768 | `GOOGLE_API_KEY` | Cloud |
 | ollama | bge-m3 | 1024 | None | Local |
+| local | feature-hashing (offline) | 256 | None | Local, deterministic |
 
 Override: `HARNESS_EMBEDDING_PROVIDER=ollama`
 
@@ -104,7 +110,7 @@ The CC adapter (`adapters/claude-code/submit.sh`) works fully — `UserPromptSub
 
 ```bash
 cd agentic-engine/rag-feedback && bun test test/rag-feedback.test.ts
-# 20 pass, 0 fail
+# 26 pass, 0 fail
 ```
 
 Covers: cosine similarity (identical/orthogonal/opposite/mismatched), content hash stability, store round-trip, index (create/skip-unchanged/re-embed/empty-dir), retrieve (top-k/empty-cache/k-param), provider selection.

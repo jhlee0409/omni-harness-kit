@@ -62,6 +62,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   a monorepo whose member list hit the depth-3/20 cap, or a stackless repo produced a
   quietly degraded harness that looked fully detected. Those now emit a warning in the
   JSON summary and on stderr (surfaced by `render.sh`).
+- **The verify→feedback loop is now closed.** verify-evidence has always written a
+  `.harness-kit/evidence.jsonl` log of what critics proved/refuted, but nothing consumed
+  it. rag-feedback now ingests that log as retrievable memory (alongside curated
+  `feedback/*.md`), so past verification outcomes surface in future sessions. Decoupled —
+  it reads the JSONL by its public shape, no import of the verify-evidence module; bounded
+  to the 50 most recent entries; opt out with `HARNESS_RAG_EVIDENCE_OFF=1`. The CC
+  rag adapter now also runs when only the evidence log exists (no curated feedback dir).
 
 ### Documentation
 - Corrected the `harness-kit.json` precedence claim: `env override > file > default`
