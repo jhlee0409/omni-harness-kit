@@ -34,6 +34,9 @@ so DISCOVER the workflow, don't assume it.
 ## 2. Triage each real finding
 FIX (real defect + user / impact) / SKIP (theoretical) / DEFER (real, not
 blocking). State the impact — no vague "probably fine". Honor `ignore_bots`.
+If a FIX-class finding has the same root cause as one you flagged on a prior
+PR in this repo, name it as recurring — that pattern is worth capturing as a
+durable lesson, not just fixing again.
 
 ## 3. Verdict — apply the repo's gate, or refuse to fabricate one
 - If `pr_workflow.merge_gate` is defined (or discoverable from branch protection),

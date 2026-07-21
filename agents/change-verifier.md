@@ -51,7 +51,9 @@ prove a change is complete — or list exactly what is missing.
 - **Checked**: each item — callsites N/N updated, tests N passed, wiring traced,
   real-run artifact (path / response body / record). Evidence required per item;
   a row with no evidence is "CANNOT VERIFY" for that row.
-- **Gaps**: every gap with `file:line` — be specific, no hand-waving.
+- **Gaps**: every gap with `file:line` — be specific, no hand-waving. If a gap's
+  root cause matches one you've flagged before in this repo, say so explicitly —
+  that repetition is itself a finding worth a durable lesson, not just a fix.
 - **Next**: what must be done to close each gap.
 
 ## Constraints
