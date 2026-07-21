@@ -260,8 +260,15 @@ Early PoC (0.x — expect breaking changes). What is actually proven, stated hon
 - **Agentic engine** (`agentic-engine/`) — all 4 modules implemented and tested (83 tests,
   all pass): cross-vendor verification (21 tests), rag-feedback retrieval (20 tests),
   intent-router classification (12 tests), verify-evidence capture (17 tests). CC adapters
-  work fully; OC adapters for rag-feedback and intent-router are stubbed (system.transform
-  doesn't expose the user's latest message — known OpenCode limitation).
+  build and pass their unit tests; OC adapters for rag-feedback and intent-router are
+  stubbed (system.transform doesn't expose the user's latest message — known OpenCode
+  limitation). **verify-evidence's CC adapter is not registered in `hooks/hooks.json` by
+  design** — it is a `SubagentStop` hook that appends a JSONL log entry whenever a critic
+  agent's output matches a claim pattern (no blocking, no context injection back to the
+  model). To opt in, add it to your own `.claude/settings.json` `hooks.SubagentStop`
+  pointing at `agentic-engine/verify-evidence/adapters/claude-code/subagent-stop.sh`.
+  Pilot it before trusting the log: any always-on hook accumulates entries nobody reviews
+  unless something actually consumes `.harness-kit/evidence.jsonl` downstream.
 - **Detection + the deterministic engine** (`detect.sh`, the two hooks, the
   scaffolders, the template contracts) is covered by an extensive shell test suite,
   run in CI on every push.
