@@ -42,14 +42,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Regression tests for the fixes above: multi-store and duplicate-store `db-verify`
-  (`render_test.sh`), guard look-alike vs real-invocation cases (`guard_test.sh`), a
-  non-ASCII slug (`spec_test.sh`), and `isGitMutation` subcommand cases
-  (OpenCode `dogfood.test.ts`).
+  (`render_test.sh`) and a non-ASCII slug (`spec_test.sh`). (The guard look-alike and
+  `isGitMutation` classification cases live in the cross-runtime conformance matrix
+  below — one shared table, not per-runtime duplicates.)
 - **Deterministic offline embedding provider (`local`, alias `hash`).** Feature-hashing
   over unicode tokens — no API key, no network — selectable with
-  `HARNESS_EMBEDDING_PROVIDER=local`. Gives the portable kit a real zero-dependency
-  fallback for rag-feedback / intent-router, and makes their retrieval/routing pipeline
-  self-testable in CI without a live model.
+  `HARNESS_EMBEDDING_PROVIDER=local`. An opt-in, zero-dependency offline provider for
+  rag-feedback / intent-router (not an automatic fallback — the default is still
+  `openai`), it also makes their retrieval/routing pipeline self-testable in CI without
+  a live model.
 - **CI now runs the engine and adapter test suites it previously skipped.** The
   `agentic-engine` bun suites (rag-feedback, intent-router, verify-evidence),
   cross-vendor's shell test, and the OpenCode adapter tests + typecheck existed but CI

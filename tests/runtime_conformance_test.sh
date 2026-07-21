@@ -32,9 +32,11 @@ cmds=(
   "git log --grep push"
   "git stash push"
   "git diff HEAD commit.txt"
+  "forgit push"
+  "echo 'git commit'"
   "ls -la"
 )
-expect=( T T T T T T F F F F F F F )
+expect=( T T T T T T F F F F F F F F F )
 
 # OpenCode verdicts: isGitMutation() over the whole table in one bun call.
 oc_raw="$(CASES="$(printf '%s\n' "${cmds[@]}")" OC_GIT="$ROOT/adapters/opencode/src/git.ts" bun -e '

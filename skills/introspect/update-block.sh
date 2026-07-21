@@ -15,8 +15,11 @@ import sys, os, tempfile
 file, start, end, new = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 try:
     txt = open(file).read()
+    mode = os.stat(file).st_mode & 0o7777          # preserve the file's existing mode
 except FileNotFoundError:
     txt = ""
+    _u = os.umask(0); os.umask(_u)
+    mode = 0o666 & ~_u                              # umask default for a brand-new file
 si = txt.find(start)
 if si != -1:
     ei = txt.find(end, si)
@@ -40,6 +43,7 @@ fd, tmp = tempfile.mkstemp(dir=d, prefix=".update-block.")
 try:
     with os.fdopen(fd, "w") as f:
         f.write(txt)
+    os.chmod(tmp, mode)   # mkstemp forces 0600; restore the intended mode before swap
     os.replace(tmp, file)
 except BaseException:
     try: os.unlink(tmp)

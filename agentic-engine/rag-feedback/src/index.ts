@@ -43,9 +43,11 @@ async function readEvidenceMemories(path: string): Promise<{ id: string; content
       const r = JSON.parse(line) as { agent?: string; claim?: string; evidence?: string; timestamp?: number };
       if (!r.claim) continue;
       const agent = r.agent ?? "critic";
-      const id = `evidence:${agent}:${r.timestamp ?? contentHash(r.claim)}`;
       const detail = r.evidence ? `\n${r.evidence}` : "";
-      out.push({ id, content: `[verification evidence — ${agent}] ${r.claim}${detail}` });
+      const content = `[verification evidence — ${agent}] ${r.claim}${detail}`;
+      // id = agent + content hash → distinct content never collides; identical lines
+      // dedupe. (A timestamp-only id collided when two records shared a claim.)
+      out.push({ id: `evidence:${agent}:${contentHash(content)}`, content });
     } catch {
       // skip a malformed line — one bad record must never break retrieval
     }
@@ -66,7 +68,10 @@ export function createRetriever(
       const next: VectorEntry[] = [];
       const toEmbed: { id: string; content: string }[] = [];
 
+      const seen = new Set<string>();
       const stage = (id: string, content: string): void => {
+        if (seen.has(id)) return;   // one id per run — never write a duplicate cache entry
+        seen.add(id);
         const hash = contentHash(content);
         const existing = cached.get(id);
         if (existing && existing.hash === hash) next.push(existing);

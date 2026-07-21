@@ -93,7 +93,8 @@ src/
 └── providers/
     ├── openai.ts     — text-embedding-3-small via fetch
     ├── google.ts     — text-embedding-004 via fetch
-    └── ollama.ts     — bge-m3 via fetch
+    ├── ollama.ts     — bge-m3 via fetch
+    └── local.ts      — feature-hashing (offline, deterministic, no key)
 ```
 
 Cache: `.harness-cache/feedback-vectors.json` (auto-created, gitignored).
