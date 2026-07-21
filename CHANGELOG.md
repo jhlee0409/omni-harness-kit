@@ -69,6 +69,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   it reads the JSONL by its public shape, no import of the verify-evidence module; bounded
   to the 50 most recent entries; opt out with `HARNESS_RAG_EVIDENCE_OFF=1`. The CC
   rag adapter now also runs when only the evidence log exists (no curated feedback dir).
+- **Cross-runtime conformance matrix (`tests/runtime_conformance_test.sh`).** The
+  git-commit/push classification that gates the protected-branch guard is implemented
+  separately per runtime (CC shell parser vs OpenCode `isGitMutation`), and drifted
+  before — the CC guard was hardened while OpenCode kept a substring match. One shared
+  case table is now asserted against every runtime's real implementation and fails on
+  any disagreement (Codex is asserted as a deliberate no-guard non-participant). The
+  previously duplicated per-runtime classification cases (in `guard_test.sh` and the
+  OpenCode `dogfood.test.ts`) were folded into this single source of truth.
 
 ### Documentation
 - Corrected the `harness-kit.json` precedence claim: `env override > file > default`
