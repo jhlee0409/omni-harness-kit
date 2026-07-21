@@ -19,3 +19,6 @@
      "200 OK" or a fake fixture is not acceptance. -->
 
 ## Risks / open questions
+<!-- Mark any unresolved requirement inline as `[NEEDS CLARIFICATION: what's
+     unknown]` instead of guessing silently — resolve it (or drop Status back to
+     Draft) before this spec leaves Draft. -->
