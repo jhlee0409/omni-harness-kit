@@ -24,8 +24,18 @@ fi
 
 PROJECT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
+# The engine module lives inside the PLUGIN install, not the consumer repo —
+# resolve it via CLAUDE_PLUGIN_ROOT (set by Claude Code for hook invocations),
+# never via PROJECT_DIR. A prior version imported from "$PROJECT_DIR/agentic-engine/..."
+# which only exists when running inside this repo itself; installed as a plugin
+# in any other repo it silently no-op'd (fail-open masked the bug).
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+if [[ -z "$PLUGIN_ROOT" ]]; then
+  exit 0
+fi
+
 bun -e "
-import { createEvidenceCapture } from '$PROJECT_DIR/agentic-engine/verify-evidence/src/index.ts';
+import { createEvidenceCapture } from '$PLUGIN_ROOT/agentic-engine/verify-evidence/src/index.ts';
 const cap = createEvidenceCapture('$PROJECT_DIR');
 const record = await cap.capture(${JSON.stringify($AGENT)}, ${JSON.stringify($OUTPUT)});
 if (record) {

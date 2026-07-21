@@ -10,20 +10,27 @@ const CLAIM_PATTERNS: RegExp[] = [
   /(?:typecheck|lint|build)[:\s]+(.+)/gi,
 ];
 
-/** Agents whose output is worth capturing evidence from. */
-const EVIDENCE_AGENTS = new Set([
-  "change-verifier",
-  "db-verify",
-  "ui-verify",
-  "chrome-verify",
-  "spec-reviewer",
-  "harness-auditor",
-  "tdd-runner",
-  "oracle",
-]);
+/** Agents whose output is worth capturing evidence from.
+ * Matches agents/*.md `name:` + adapters/omp/agents/{db,ui,chrome}-verify.md.
+ * `harness-auditor` and `oracle` were removed from the repo — dropped from
+ * this list rather than left stale. */
+const EVIDENCE_AGENTS: Record<string, true> = {
+  "change-verifier": true,
+  "pr-shepherd": true,
+  "claim-checker": true,
+  "instruction-critic": true,
+  "requirement-fidelity-critic": true,
+  "readability-critic": true,
+  "architecture-reviewer": true,
+  "spec-reviewer": true,
+  "tdd-runner": true,
+  "db-verify": true,
+  "ui-verify": true,
+  "chrome-verify": true,
+};
 
 export function isEvidenceAgent(agentName: string): boolean {
-  return EVIDENCE_AGENTS.has(agentName);
+  return EVIDENCE_AGENTS[agentName] === true;
 }
 
 /** Extract the strongest verification claim from agent output. */

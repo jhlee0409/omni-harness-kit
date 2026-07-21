@@ -28,7 +28,7 @@ describe("parser", () => {
     expect(isEvidenceAgent("change-verifier")).toBe(true);
     expect(isEvidenceAgent("db-verify")).toBe(true);
     expect(isEvidenceAgent("ui-verify")).toBe(true);
-    expect(isEvidenceAgent("harness-auditor")).toBe(true);
+    expect(isEvidenceAgent("pr-shepherd")).toBe(true);
     expect(isEvidenceAgent("tdd-runner")).toBe(true);
   });
 
