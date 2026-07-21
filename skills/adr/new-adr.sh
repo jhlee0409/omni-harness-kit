@@ -3,7 +3,12 @@
 # usage: new-adr.sh <title>   (run from the repo root)
 set -euo pipefail
 title="${1:?usage: new-adr.sh <title>}"
-slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-' | sed 's/--*/-/g; s/^-//; s/-$//')"
+# Slug via python3 (NOT tr -cd 'a-z0-9-') so non-ASCII titles (e.g. Korean) survive
+# instead of collapsing to the "decision" fallback. Keeps unicode word chars + hyphen.
+slug="$(printf '%s' "$title" | python3 -c 'import sys,re
+s=re.sub(r"\s+","-",sys.stdin.read().strip().lower())
+s=re.sub(r"[^\w-]","",s,flags=re.U).replace("_","-")
+print(re.sub(r"-{2,}","-",s).strip("-"))')"
 [ -n "$slug" ] || slug="decision"
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 mkdir -p docs/adr

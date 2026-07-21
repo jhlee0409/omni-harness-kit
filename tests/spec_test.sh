@@ -22,6 +22,11 @@ echo "EDITED" >> "$TMP/$out/spec.md"
 ( cd "$TMP" && CLAUDE_PLUGIN_ROOT="$ROOT" bash "$SCRIPT" "My Cool Feature" >/dev/null 2>&1 )
 grep -q "EDITED" "$TMP/$out/spec.md" && ok "existing file preserved" || no "clobbered edit"
 
+echo "[4] non-ASCII (Korean) name preserved in slug (not collapsed to fallback)"
+out2="$(cd "$TMP" && CLAUDE_PLUGIN_ROOT="$ROOT" bash "$SCRIPT" "라이브 스케줄러")"
+echo "$out2" | grep -q '라이브-스케줄러' && ok "Korean slug preserved" || no "Korean collapsed ($out2)"
+[ -f "$TMP/$out2/spec.md" ] && ok "spec created for Korean name" || no "no spec for Korean name"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

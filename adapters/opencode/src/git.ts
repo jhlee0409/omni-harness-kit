@@ -40,7 +40,31 @@ export function extractBashCommand(args: unknown): string {
   return "";
 }
 
-/** Returns true if the command is a git commit or push. */
+/**
+ * Returns true only when git's SUBCOMMAND is commit or push — mirroring the CC guard
+ * (hooks/scripts/protected-branch-guard.sh). A bare substring match fired on look-alikes
+ * ("legit commit", "git pushed") and on commit/push appearing as an argument value
+ * ("git log --grep push"); tracking the subcommand position avoids both.
+ */
+const GIT_VALUE_FLAGS: Record<string, true> = {
+  "-C": true, "-c": true, "--git-dir": true, "--work-tree": true,
+  "--exec-path": true, "--namespace": true, "--super-prefix": true, "--config-env": true,
+};
 export function isGitMutation(cmd: string): boolean {
-  return cmd.includes("git commit") || cmd.includes("git push");
+  const toks = cmd.split(/\s+/).filter(Boolean);
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t === undefined || (t !== "git" && !t.endsWith("/git"))) continue;
+    let j = i + 1;
+    while (j < toks.length) {
+      const a = toks[j];
+      if (a === undefined) break;
+      if (GIT_VALUE_FLAGS[a]) { j += 2; continue; }
+      if (a.startsWith("-")) { j += 1; continue; }
+      break;
+    }
+    const sub = toks[j];
+    if (sub === "commit" || sub === "push") return true;
+  }
+  return false;
 }

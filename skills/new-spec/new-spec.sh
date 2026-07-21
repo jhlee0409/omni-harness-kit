@@ -3,7 +3,12 @@
 # usage: new-spec.sh <name>   (run from the repo root)
 set -euo pipefail
 name="${1:?usage: new-spec.sh <name>}"
-slug="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-' | sed 's/--*/-/g; s/^-//; s/-$//')"
+# Slug via python3 (NOT tr -cd 'a-z0-9-') so non-ASCII names (e.g. Korean) survive
+# instead of collapsing to the "spec" fallback. Keeps unicode word chars + hyphen.
+slug="$(printf '%s' "$name" | python3 -c 'import sys,re
+s=re.sub(r"\s+","-",sys.stdin.read().strip().lower())
+s=re.sub(r"[^\w-]","",s,flags=re.U).replace("_","-")
+print(re.sub(r"-{2,}","-",s).strip("-"))')"
 [ -n "$slug" ] || slug="spec"
 root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 dir="specs/$(date +%Y%m%d)-${slug}"

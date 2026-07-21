@@ -32,6 +32,7 @@ detect = json.load(open(json_file))
 langs = detect.get("languages", []) or []
 fws   = detect.get("frameworks", []) or []
 dl    = detect.get("data_layer", []) or []
+dl    = list(dict.fromkeys(dl))  # dedupe: a polyglot repo can add the same store twice
 
 # Sanitize UNTRUSTED scalars before embedding them in a generated agent. The target
 # repo is untrusted (the kit's whole job is scanning it); a manifest `name` / script
@@ -130,8 +131,9 @@ if langs:
 
 # --- db-verify.md (only when a data layer is present) ---
 if dl:
-    store_key = dl[0]
-    human, howto = STORES.get(store_key, (store_key, "Verify existence + population + type against the real %s store; name the client to install." % store_key))
+    resolved = [STORES.get(k, (k, "Verify existence + population + type against the real %s store; name the client to install." % k)) for k in dl]
+    human = " + ".join(h for h, _ in resolved)
+    howto = resolved[0][1] if len(resolved) == 1 else "\n\n".join("**%s** — %s" % (h, ht) for h, ht in resolved)
     t = open(os.path.join(tpl_dir, "db-verify.md")).read()
     t = slot(t, "PROJECT_NAME", name)
     t = slot(t, "STORE_VERIFY_HOWTO", howto)

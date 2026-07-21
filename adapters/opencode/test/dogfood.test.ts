@@ -10,6 +10,7 @@ import { rm, mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Shell, ShellPromise, ShellOutput } from "../src/types.ts";
+import { isGitMutation } from "../src/git.ts";
 
 // ─── Mock helpers ────────────────────────────────────────────────
 
@@ -251,6 +252,36 @@ describe("branch-guard hook", () => {
 
     expect((output.args as Record<string, unknown>).command).toBe("git commit -m test"); // unchanged
     delete process.env.HARNESS_GUARD_OFF;
+  });
+});
+
+describe("isGitMutation (subcommand-aware)", () => {
+  it("returns true only when git's subcommand is commit/push", () => {
+    for (const c of [
+      "git commit -m x",
+      "git push origin main",
+      "git -c user.email=a@b.c commit -m y",
+      "git -C /tmp/repo push",
+      "git --no-pager commit -m z",
+      "ls && git push",
+    ]) {
+      expect(isGitMutation(c)).toBe(true);
+    }
+  });
+
+  it("ignores look-alikes and argument-position mentions", () => {
+    for (const c of [
+      "legit commit here",
+      "git pushed already",
+      "digit commit",
+      "forgit push",
+      "git log --grep push",
+      "git stash push",
+      "git diff HEAD commit.txt",
+      "ls -la",
+    ]) {
+      expect(isGitMutation(c)).toBe(false);
+    }
   });
 });
 

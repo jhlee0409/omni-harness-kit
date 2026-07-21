@@ -35,16 +35,36 @@ if [[ ! -d "$SKILLS_DIR" ]]; then
   exit 0
 fi
 
+# The engine module lives in the PLUGIN install, not the consumer repo — resolve it
+# via CLAUDE_PLUGIN_ROOT, never PROJECT_DIR (which only holds the module when running
+# inside this repo itself; installed elsewhere it silently no-op'd — the same bug
+# fixed for verify-evidence in 761c26e). PROJECT_DIR stays the cache/data location.
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+if [[ -z "$PLUGIN_ROOT" ]]; then
+  echo '{"additionalContext":""}'
+  exit 0
+fi
+
 THRESHOLD="${HARNESS_INTENT_THRESHOLD:-0.75}"
 
-RESULT="$(bun -e "
-import { createRouter } from '$PROJECT_DIR/agentic-engine/intent-router/src/index.ts';
-const r = createRouter('$PROJECT_DIR', undefined, $THRESHOLD);
-await r.index('$SKILLS_DIR');
-const match = await r.classify(${JSON.stringify(PROMPT)});
-if (!match) { console.log(''); process.exit(0); }
-console.log('[Intent match] Skill: ' + match.skill + ' (similarity: ' + match.similarity.toFixed(2) + ')');
-" 2>/dev/null || echo "")"
+# Pass values via the ENVIRONMENT and keep the bun script single-quoted so bash never
+# expands `${...}` / `$` inside JS. Interpolating `${JSON.stringify(PROMPT)}` into a
+# double-quoted bun -e string is a fatal bash "bad substitution" that kills the hook
+# under `set -euo pipefail`. Dynamic import resolves the engine path from the env.
+RESULT="$(
+  HARNESS_ENGINE="$PLUGIN_ROOT/agentic-engine/intent-router/src/index.ts" \
+  HARNESS_PROJECT_DIR="$PROJECT_DIR" \
+  HARNESS_SKILLS_DIR="$SKILLS_DIR" \
+  HARNESS_THRESHOLD="$THRESHOLD" \
+  HARNESS_PROMPT="$PROMPT" \
+  bun -e '
+const { createRouter } = await import(process.env.HARNESS_ENGINE);
+const r = createRouter(process.env.HARNESS_PROJECT_DIR, undefined, Number(process.env.HARNESS_THRESHOLD));
+await r.index(process.env.HARNESS_SKILLS_DIR);
+const match = await r.classify(process.env.HARNESS_PROMPT ?? "");
+if (!match) { console.log(""); process.exit(0); }
+console.log("[Intent match] Skill: " + match.skill + " (similarity: " + match.similarity.toFixed(2) + ")");
+' 2>/dev/null || echo "")"
 
 if [[ -z "$RESULT" ]]; then
   echo '{"additionalContext":""}'

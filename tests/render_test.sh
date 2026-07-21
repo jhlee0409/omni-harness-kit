@@ -117,6 +117,18 @@ sys.exit(0 if all(k in ('name','description','tools','model') for k in keys) els
 PY
 [ $? = 0 ] && ok "frontmatter stays valid YAML — no injected key, no multi-line breakout" || no "injected YAML key leaked into frontmatter"
 
+echo "[13] multi-store repo — db-verify covers ALL detected stores (not just data_layer[0])"
+mkdir -p "$TMP/multi"; printf '{"name":"app","dependencies":{"mongoose":"^8","pg":"^8","ioredis":"^5"}}' > "$TMP/multi/package.json"; : > "$TMP/multi/package-lock.json"
+[ "$(render multi)" = "0" ] && ok "render exits 0" || no "render failed"
+{ body multi db-verify.md | grep -qF '$exists' && body multi db-verify.md | grep -qF 'information_schema' && body multi db-verify.md | grep -qF 'HEXISTS'; } \
+  && ok "all three store idioms (Mongo/Postgres/Redis) rendered" || no "a store idiom is missing"
+
+echo "[14] duplicate store key (mongoose + Prisma mongodb) is deduped — no 'MongoDB + MongoDB'"
+mkdir -p "$TMP/dup/prisma"; printf '{"name":"app","dependencies":{"mongoose":"^8","@prisma/client":"^5"}}' > "$TMP/dup/package.json"
+printf 'datasource db { provider = "mongodb" }\n' > "$TMP/dup/prisma/schema.prisma"; : > "$TMP/dup/package-lock.json"
+[ "$(render dup)" = "0" ] && ok "render exits 0" || no "render failed"
+body dup db-verify.md | grep -qF 'MongoDB + MongoDB' && no "store rendered twice (not deduped)" || ok "duplicate store deduped"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

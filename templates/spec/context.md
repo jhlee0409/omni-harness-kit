@@ -10,6 +10,7 @@
 - **Files touched:**
 - **Next command:**
 - **In-flight decisions:**
+- **Don't redo:**
 <!-- resume:end -->
 
 ## Working notes

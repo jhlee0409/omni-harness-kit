@@ -34,13 +34,21 @@ if [[ -z "$PLUGIN_ROOT" ]]; then
   exit 0
 fi
 
-bun -e "
-import { createEvidenceCapture } from '$PLUGIN_ROOT/agentic-engine/verify-evidence/src/index.ts';
-const cap = createEvidenceCapture('$PROJECT_DIR');
-const record = await cap.capture(${JSON.stringify($AGENT)}, ${JSON.stringify($OUTPUT)});
+# Pass values via the ENVIRONMENT and keep the bun script single-quoted so bash never
+# expands `${...}` / `$` inside JS. Interpolating `${JSON.stringify($AGENT)}` into a
+# double-quoted bun -e string is a fatal bash "bad substitution" that kills the hook
+# under `set -euo pipefail`. Dynamic import resolves the engine path from the env.
+HARNESS_ENGINE="$PLUGIN_ROOT/agentic-engine/verify-evidence/src/index.ts" \
+HARNESS_PROJECT_DIR="$PROJECT_DIR" \
+HARNESS_AGENT="$AGENT" \
+HARNESS_OUTPUT="$OUTPUT" \
+bun -e '
+const { createEvidenceCapture } = await import(process.env.HARNESS_ENGINE);
+const cap = createEvidenceCapture(process.env.HARNESS_PROJECT_DIR);
+const record = await cap.capture(process.env.HARNESS_AGENT ?? "", process.env.HARNESS_OUTPUT ?? "");
 if (record) {
-  process.stderr.write('[evidence] captured: ' + record.agent + ' → ' + record.claim.slice(0, 80) + '\n');
+  process.stderr.write("[evidence] captured: " + record.agent + " → " + record.claim.slice(0, 80) + "\n");
 }
-" 2>/dev/null || true
+' 2>/dev/null || true
 
 exit 0

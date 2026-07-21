@@ -8,10 +8,32 @@ set -uo pipefail
 input="$(cat)"
 cmd="$(printf '%s' "$input" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("tool_input",{}).get("command",""))' 2>/dev/null)" || exit 0
 
-case "$cmd" in
-  *"git commit"*|*"git push"*) ;;
-  *) exit 0 ;;
-esac
+# Fire only when git's SUBCOMMAND is commit/push. Parse the command with shlex (python3
+# is already required above) so the match tracks the real subcommand position: a mention
+# in a quoted string ("echo 'git commit'"), a look-alike word ("legit commit", "git
+# pushed"), or commit/push as an argument value ("git log --grep push", "git stash push",
+# "git diff commit.txt") does NOT trigger. Fail-open: unparseable / not a git commit|push
+# → python exits nonzero → `|| exit 0` stands the guard down.
+GIT_CMD="$cmd" python3 -c '
+import os, shlex, sys
+try:
+    toks = shlex.split(os.environ.get("GIT_CMD", ""))
+except Exception:
+    sys.exit(1)
+VALUE_FLAGS = {"-C","-c","--git-dir","--work-tree","--exec-path","--namespace","--super-prefix","--config-env"}
+hit = False
+for i, t in enumerate(toks):
+    if t == "git" or t.endswith("/git"):
+        j = i + 1
+        while j < len(toks):
+            a = toks[j]
+            if a in VALUE_FLAGS: j += 2; continue
+            if a.startswith("-"): j += 1; continue
+            break
+        if j < len(toks) and toks[j] in ("commit", "push"):
+            hit = True; break
+sys.exit(0 if hit else 1)
+' || exit 0
 
 # Read branch + config from the project dir (the hook's cwd is not guaranteed to be it).
 proj="${CLAUDE_PROJECT_DIR:-$PWD}"

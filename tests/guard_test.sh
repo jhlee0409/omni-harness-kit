@@ -41,6 +41,20 @@ echo "[6] non-git command → no-op"
 d="$TMP/r6"; mkrepo "$d" main
 out="$(run "$d" "ls -la")"; [ -z "$out" ] && ok "non-git command ignored" || no "fired on non-git ($out)"
 
+echo "[7] look-alikes on a protected branch → no-op (subcommand-aware match)"
+d="$TMP/r7"; mkrepo "$d" main; lk=0
+for c in "legit commit here" "git pushed already" "git log --grep push" "git stash push" "git diff HEAD commit.txt" "echo 'git commit'"; do
+  [ -z "$(run "$d" "$c")" ] || { lk=1; echo "    triggered on: $c"; }
+done
+[ "$lk" = 0 ] && ok "look-alikes do not trigger the guard" || no "a look-alike triggered the guard"
+
+echo "[8] real commit/push forms on a protected branch → ask (incl. git-level flags)"
+d="$TMP/r8"; mkrepo "$d" main; rl=0
+for c in "git commit -m x" "git push origin main" "git -c user.email=a@b.c commit -m y" "git -C $d push" "git --no-pager commit -m z"; do
+  echo "$(run "$d" "$c")" | grep -q '"permissionDecision":"ask"' || { rl=1; echo "    missed: $c"; }
+done
+[ "$rl" = 0 ] && ok "real commit/push forms all ask" || no "a real invocation was missed"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

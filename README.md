@@ -203,8 +203,10 @@ The detector follows the proven scaffolding/introspection playbook
 ## Configuration
 
 `introspect` generates `.claude/harness-kit.json` in the target repo — the shared
-config read by the Claude Code hooks and the Codex Stop adapter (precedence: env
-override > this file > built-in default):
+config read by the Claude Code hooks and the Codex Stop adapter. `protected_branches`
+follows env override > this file > built-in default; `verify_command` is read from
+this file only (its sole env control is the `HARNESS_VERIFY_OFF=1` off switch — there
+is no env override and no built-in default command), and `blocking` defaults to false:
 
 ```json
 {

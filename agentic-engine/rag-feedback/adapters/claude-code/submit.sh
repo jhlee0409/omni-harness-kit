@@ -41,21 +41,40 @@ if [[ ! -d "$FEEDBACK_DIR" ]]; then
   exit 0
 fi
 
-# Run the retriever (Bun one-liner for embedding + cosine similarity)
-RESULT="$(bun -e "
-import { createRetriever } from '$PROJECT_DIR/agentic-engine/rag-feedback/src/index.ts';
-const r = createRetriever('$PROJECT_DIR');
-await r.index('$FEEDBACK_DIR');
-const hits = await r.retrieve(${JSON.stringify(PROMPT)}, 3);
-if (hits.length === 0) { console.log(''); process.exit(0); }
-const lines = ['[Relevant feedback from past sessions]'];
+# The engine module lives in the PLUGIN install, not the consumer repo — resolve it
+# via CLAUDE_PLUGIN_ROOT, never PROJECT_DIR (which only holds the module when running
+# inside this repo itself; installed elsewhere it silently no-op'd — the same bug
+# fixed for verify-evidence in 761c26e). PROJECT_DIR stays the cache/data location.
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+if [[ -z "$PLUGIN_ROOT" ]]; then
+  echo '{"additionalContext":""}'
+  exit 0
+fi
+
+# Run the retriever. Pass every value through the ENVIRONMENT and keep the bun script
+# single-quoted so bash never expands `${...}` / `$` inside JS — interpolating
+# `${JSON.stringify(PROMPT)}` into a double-quoted bun -e string is a fatal bash "bad
+# substitution" that kills the hook under `set -euo pipefail`. Dynamic import resolves
+# the engine path from the env too.
+RESULT="$(
+  HARNESS_ENGINE="$PLUGIN_ROOT/agentic-engine/rag-feedback/src/index.ts" \
+  HARNESS_PROJECT_DIR="$PROJECT_DIR" \
+  HARNESS_FEEDBACK_DIR="$FEEDBACK_DIR" \
+  HARNESS_PROMPT="$PROMPT" \
+  bun -e '
+const { createRetriever } = await import(process.env.HARNESS_ENGINE);
+const r = createRetriever(process.env.HARNESS_PROJECT_DIR);
+await r.index(process.env.HARNESS_FEEDBACK_DIR);
+const hits = await r.retrieve(process.env.HARNESS_PROMPT ?? "", 3);
+if (hits.length === 0) { console.log(""); process.exit(0); }
+const lines = ["[Relevant feedback from past sessions]"];
 for (const h of hits) {
-  lines.push('• (' + h.similarity.toFixed(2) + ') ' + h.id);
-  lines.push(h.content.split('\n').slice(0, 10).join('\n'));
-  lines.push('');
+  lines.push("• (" + h.similarity.toFixed(2) + ") " + h.id);
+  lines.push(h.content.split("\n").slice(0, 10).join("\n"));
+  lines.push("");
 }
-console.log(lines.join('\n'));
-" 2>/dev/null || echo "")"
+console.log(lines.join("\n"));
+' 2>/dev/null || echo "")"
 
 if [[ -z "$RESULT" ]]; then
   echo '{"additionalContext":""}'

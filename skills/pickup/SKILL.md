@@ -14,10 +14,11 @@ allowed-tools: Read, Bash, Grep, Glob
 Re-establish where the work left off — from the resume block ALONE, without asking
 the user to re-narrate.
 
-1. **Find the resume block.** Look for `.claude/handoff.md`, then any
-   `specs/*/context.md` with a `## 0. Resume here` block (use the `[spec-slug]`
-   arg to disambiguate when several exist). If none is found, say so plainly —
-   don't guess.
+1. **Find the resume block.** Prefer an active spec's `specs/*/context.md`
+   `## 0. Resume here` block (use the `[spec-slug]` arg to disambiguate when several
+   exist) — that is where `/harness-kit:handoff` writes when a spec is active; fall
+   back to `.claude/handoff.md`. When both exist, use the most recently modified —
+   it is the freshest handoff. If none is found, say so plainly — don't guess.
 2. **Read it fully**, then re-ground in the repo: `git status --short`,
    `git log --oneline -5`, and read the files it lists. Confirm the stated state
    matches reality (files actually changed, the next command still makes sense).

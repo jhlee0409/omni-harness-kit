@@ -6,6 +6,53 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **`db-verify` covered only the first detected data store.** Detection is additive
+  (a repo can report `mongodb` + `postgres` + `redis`), but the renderer used
+  `data_layer[0]`, silently dropping guidance for every other store. `render.sh` now
+  emits per-store verification idioms for all detected stores (deduped, so a store
+  detected twice is not repeated); single-store output is unchanged.
+- **The `agentic-engine` Claude Code hook adapters were broken two ways.** (1)
+  rag-feedback and intent-router imported the engine from `$PROJECT_DIR`, which does
+  not exist when the kit is installed as a plugin in another repo — the same silent
+  no-op fixed for verify-evidence in 761c26e; all three now resolve the module via
+  `CLAUDE_PLUGIN_ROOT` and stand down when it is unset. (2) All three interpolated
+  `${JSON.stringify(...)}` into a double-quoted `bun -e` string, which bash parses as a
+  fatal "bad substitution" that killed the hook under `set -euo pipefail` before it
+  could run. Values now pass through the environment into a single-quoted bun script
+  (engine path resolved by dynamic import), so the adapters run to completion.
+- **Spec/ADR/worktree slugs collapsed non-ASCII names to a generic fallback.**
+  `tr -cd 'a-z0-9-'` stripped Korean (and other non-ASCII) entirely, so `라이브 스케줄러`
+  became `spec`/`decision`/empty and collided across tasks. Slugification now runs in
+  `python3`, preserving unicode word characters (a pure-underscore input still falls
+  back).
+- **The protected-branch guard matched `git commit`/`git push` as bare substrings**, so
+  it fired on mentions like `legit commit` and `git pushed`. It now parses the command
+  with `shlex` and fires only when git's actual *subcommand* is `commit`/`push` —
+  ignoring look-alikes, quoted mentions (`echo 'git commit'`), and argument-position
+  matches (`git log --grep push`, `git stash push`, `git diff commit.txt`), while still
+  catching git-level-flag forms (`git -c k=v commit`, `git -C dir push`,
+  `git --no-pager commit`).
+- **The OpenCode branch guard carried the identical substring bug.**
+  `adapters/opencode/src/git.ts` `isGitMutation` used `cmd.includes("git commit")`; it
+  now uses the same subcommand-aware match as the CC guard.
+
+### Added
+- Regression tests for the fixes above: multi-store and duplicate-store `db-verify`
+  (`render_test.sh`), guard look-alike vs real-invocation cases (`guard_test.sh`), a
+  non-ASCII slug (`spec_test.sh`), and `isGitMutation` subcommand cases
+  (OpenCode `dogfood.test.ts`).
+
+### Documentation
+- Corrected the `harness-kit.json` precedence claim: `env override > file > default`
+  holds for `protected_branches` only. `verify_command` is read from the file alone —
+  its sole env control is the `HARNESS_VERIFY_OFF=1` off switch (no env override, no
+  built-in default command).
+- `pickup` now searches the active spec's `context.md` resume block before
+  `.claude/handoff.md` (mirroring where `handoff` writes) and prefers the most
+  recently modified when both exist; the spec `context.md` template gained the
+  `Don't redo:` field that `handoff` already required.
+
 ## [0.7.0] - 2026-07-13
 
 **Codex tracer + runtime-safe Stop feedback.** Harness Kit can now be installed as
