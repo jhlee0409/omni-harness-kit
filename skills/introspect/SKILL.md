@@ -42,6 +42,7 @@ Run a detection sweep and read what you find. Markers and what they imply:
 | `Cargo.toml` | Rust. |
 | `pom.xml` / `build.gradle` | JVM. |
 | `Gemfile` | Ruby. |
+| shell test suite (`tests/*_test.sh` / `*.bats`) + no other manifest | Shell tooling repo (fallback — only when no packaged-language manifest exists). |
 
 From `package.json` dependencies, classify the **framework**:
 `next`→Next.js · `react`(no next)→React SPA · `vue`/`nuxt`→Vue ·
@@ -192,7 +193,18 @@ Record the answer; it drives the `worktree_workflow` flag and the
    `{{TEST_DISCIPLINE}}` / `{{AGENT_ROUTING}}` / `{{ARCHITECTURE_NOTE}}`) — that is the
    irreducible probabilistic residue; review it.
 
-3. **`.claude/harness-kit.json`** — the single per-repo config both plugin hooks
+3. **`.claude/repo-map.md`** — a DETERMINISTIC navigation map (stack / entry
+   points / top-level layout / monorepo members / where tests live) so an agent
+   orients on the whole codebase by progressive disclosure: read the map, then
+   drill into the exact subtree. Run:
+   ```bash
+   bash "${CLAUDE_PLUGIN_ROOT}/skills/introspect/repomap.sh" <target>
+   ```
+   Facts only — it never fabricates what a module *does* (that judgment is left for
+   a human to fill in); dir roles are name-based heuristics. It is a navigation doc
+   refreshed by re-running introspect, NOT a stored metric.
+
+4. **`.claude/harness-kit.json`** — the single per-repo config both plugin hooks
    read (precedence for the hooks: env override > this file > built-in default).
    ```json
    {
@@ -223,7 +235,7 @@ Record the answer; it drives the `worktree_workflow` flag and the
      pr-shepherd reports state + "you decide" rather than fabricating MERGEABLE).
      Omit the whole block if there's no PR host (a local-only repo).
 
-4. **Scaffolding** (only if absent): ensure `scratch/` is gitignored (append it
+5. **Scaffolding** (only if absent): ensure `scratch/` is gitignored (append it
    to `.gitignore`); create `<target>/specs/.gitkeep` and
    `<target>/docs/adr/0000-record-architecture-decisions.md` (a one-paragraph ADR
    starter). The `/harness-kit:new-spec` and `/harness-kit:adr` skills (from the

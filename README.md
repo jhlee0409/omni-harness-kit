@@ -59,6 +59,10 @@ Full install steps + caveats are in [Install](#install).
   (architect + the two conditional critics) are filled by a script from pure-data
   slots: same input, same output, no LLM, no slot leak. The only probabilistic part
   left is the spine's judgment prose.
+- **`.claude/repo-map.md`** — `introspect` also emits a deterministic navigation
+  map (stack / entry points / top-level layout / monorepo members / where tests
+  live) so an agent orients on the whole codebase by progressive disclosure — read
+  the map, then drill into the exact subtree — instead of blind-globbing.
 
 ### The critic fleet (`agents/`)
 
@@ -93,6 +97,11 @@ verification is the reliability lever — no measurement system required.
   it in a fresh session.
 - **`tdd` · `diagnose` · `coding-guidelines`** — red → green → refactor, root-cause
   debugging, and guidelines that counter common LLM mistakes.
+- **`localize` · `blast-radius` · `assess`** — resolve a change to an exact edit
+  target then test-gate it (localize → edit → validate); enumerate a symbol's full
+  impact set (references / callers / implementations, with unresolved dynamic
+  regions surfaced, never a false "completeness" claim); and audit maintainability
+  read-only (size × churn hotspots → a ranked list of discrete fix PRs).
 
 ### The hooks (`hooks/`)
 
@@ -235,7 +244,8 @@ hooks **fail open silently** — they never block your work, but the guard you e
 is simply absent.
 
 **Stack coverage & language.** The deterministic detector covers Node / TypeScript /
-Python / Go / Rust / Ruby / JVM (Maven & Gradle); any other stack (PHP, Elixir, .NET,
+Python / Go / Rust / Ruby / JVM (Maven & Gradle) / Shell (a bash-tooling repo,
+detected only when no packaged manifest exists); any other stack (PHP, Elixir, .NET,
 Deno, …) degrades gracefully — introspect reads its manifest and still tailors a basic
 architect. A **blank/greenfield** repo with no manifest gets the universal discipline
 spine plus a "re-run once you add a stack" note. The **generated harness is in English**
