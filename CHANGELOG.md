@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **MCP + SCIP conformance completed (portable scope).** `introspect`'s report (§5)
+  now gives coherent MCP guidance — which server each generated critic benefits from
+  (Playwright MCP → `ui-verify`; store client / DB MCP → `db-verify`; LSP/SCIP
+  code-intelligence → `blast-radius` / `change-verifier`) — under a least-privilege +
+  host-enforced-consent model; `blast-radius` documents consuming an existing LSP/SCIP
+  index if present. Auto-writing `.mcp.json` (consent theater) and shipping a SCIP
+  indexer (too heavy → enterprise adapter) are explicitly rejected. Completes roadmap
+  item 6; spec `specs/20260722-standards-conformance/`.
+
 ## [0.9.0] - 2026-07-22
 
 ### Added

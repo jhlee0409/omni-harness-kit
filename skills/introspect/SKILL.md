@@ -262,12 +262,16 @@ Print a BLUF summary:
 - **Generated**: every file written, with its path.
 - **From the plugin (not duplicated)**: the generic agents/skills/hooks now
   active in this repo.
-- **External setup you may need** (the kit does NOT bundle or copy these — it
-  tells you how to add them, you install them): if you generated `ui-verify`, the
-  browser driver it needs (the Playwright MCP — `claude mcp add playwright …` — or a
-  repo e2e tool); if you generated `db-verify`, the store's client CLI / driver
-  (`mongosh` / `psql` / `redis-cli`). List only what's actually missing, with the
-  one command to add it. Never silently embed an external tool / skill in the repo.
+- **MCP + external tools your critics need** (the kit does NOT bundle, copy, or
+  auto-write these — MCP consent is **host-enforced by the spec**, so a kit that
+  auto-generated a `.mcp.json` would be consent theater; the user adds only what they
+  consent to, least-privilege). Surface, for what you generated THIS run:
+  - `ui-verify` → the Playwright MCP (`claude mcp add playwright …`) or the repo's e2e tool.
+  - `db-verify` → the store's client / MCP (`mongosh` / `psql` / `redis-cli`, or a DB MCP).
+  - `blast-radius` / `change-verifier` → a code-intelligence source (the repo's LSP, or
+    an LSP/SCIP MCP) sharpens enumeration; they degrade to ripgrep + AST without it.
+  List only what's actually missing, with the one command to add it. Never silently
+  embed an external tool / server in the repo, and never auto-write `.mcp.json`.
 - **Refine**: 2–3 concrete next edits the user may want (e.g. "fill the Architecture
   note", "flip `blocking: true` once the verify command is trusted", "add a
   sub-context CLAUDE.md for the new package").

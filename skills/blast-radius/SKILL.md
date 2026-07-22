@@ -90,6 +90,9 @@ Bucket every discovered edge so the human can reason about coverage:
   completeness on a symbol with unresolved dynamic edges is the failure mode this
   skill exists to prevent.
 - Degrade gracefully: no LSP → run AST + ripgrep and lower the stated confidence.
+- **Consume a code-intelligence index if present; never ship one.** Use the host's
+  LSP or an existing SCIP/LSIF index when available — generating/maintaining an index
+  is heavy and out of scope (an enterprise-adapter concern, not the portable kit).
 - Read-only — enumerate and report; make no edits.
 - Cite every edge with a `file:line` confirmed by Read/grep; a count with no rows
   is not evidence.
