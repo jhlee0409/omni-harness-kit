@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-07-22
+
 ### Added
 - **MCP + SCIP conformance completed (portable scope).** `introspect`'s report (§5)
   now gives coherent MCP guidance — which server each generated critic benefits from
@@ -588,6 +590,7 @@ First public release.
 - `.claude/harness-kit.json` per-repo config; plugin + marketplace manifests, MIT
   license, community-profile files, CI. 37 tests.
 
+[0.9.1]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.9.1
 [0.9.0]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.9.0
 [0.8.0]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.8.0
 [0.5.2]: https://github.com/jhlee0409/omni-harness-kit/releases/tag/v0.5.2
