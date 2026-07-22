@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`assess` now detects duplication.** A cheap, language-agnostic rolling-hash clone
+  scan (8+ identical normalized lines seen in ≥2 places, overlap-deduped) — GitClear's
+  top AI-code smell — added to `assess.sh` signals; conservative (leads, not verdicts).
+
+### Fixed
+- **D5: Cargo `[workspace]` members/exclude are now parsed.** `detect.sh` glob-expands
+  `members` (keeping dirs that have a `Cargo.toml`) and drops `exclude`d crates, so a
+  Cargo workspace's member list is no longer polluted by excluded crates. Regression:
+  `tests/detect_test.sh` [18].
+
 ## [0.9.1] - 2026-07-22
 
 ### Added

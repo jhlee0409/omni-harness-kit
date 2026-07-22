@@ -58,12 +58,14 @@ NOTES.md (extend handoff/pickup); recall-first compaction; subagent scoping.
 
 ## Wave 3 — diagnosis & standards (enterprise / omni positioning)
 
-**5. `assess` maintainability audit.** Read-only, stack-parameterized. **v1 shipped:**
+**5. `assess` maintainability audit.** Read-only, stack-parameterized. **shipped:**
 size × 90-day-churn hotspot concentration (strongest predictor), size outliers,
-test-gap, and lint debt (when the stack linter is installed). **Deferred** (stated in
-the skill's caveats + `assess.sh`): duplication, cognitive complexity, dependency
-cycles, LSP symbol-resolution rate. Baseline/delta snapshots, never an absolute grade
-or dashboard. Backing: DORA 2024, GitClear 2024, Sonar Cognitive Complexity. No
+test-gap, lint debt (when the stack linter is installed), and a cheap language-agnostic
+**duplication** scan (rolling-hash clone blocks — GitClear's top AI-code smell).
+**Deferred** (stated in the skill's caveats + `assess.sh`): cognitive complexity,
+dependency cycles, LSP symbol-resolution rate — each needs a per-stack parser or LSP.
+Baseline/delta snapshots, never an absolute grade or dashboard. Backing: DORA 2024,
+GitClear 2024, Sonar Cognitive Complexity. No
 validated universal "AI-maintainability" metric exists → measure operationally and
 say so. Spec: `specs/20260722-maintainability-assess-skill/`.
 
