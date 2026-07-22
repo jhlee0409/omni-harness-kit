@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "harness-kit-omp",
   "displayName": "Harness Kit — omp",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "omp (oh-my-pi) target for Harness Kit: an omp-native role/verify agent fleet, verification skills, TTSR render/backend guards, a deterministic harness-check audit device, and a project-onboarder that tailors <repo>/.omp/ to a repo's stack.",
   "author": { "name": "Jack Lee", "url": "https://github.com/jhlee0409" },
   "license": "MIT",
