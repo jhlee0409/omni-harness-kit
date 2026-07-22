@@ -58,13 +58,14 @@ NOTES.md (extend handoff/pickup); recall-first compaction; subagent scoping.
 
 ## Wave 3 — diagnosis & standards (enterprise / omni positioning)
 
-**5. `assess` maintainability audit.** Read-only, stack-parameterized. Cheap
-signals: churn×complexity hotspot concentration (strongest predictor), duplication,
-p95 cognitive complexity, dependency cycles, LSP symbol-resolution rate (AI-usability
-proxy), verify/test command discoverability. Baseline/delta snapshots, never an
-absolute grade or dashboard. Backing: DORA 2024, GitClear 2024, Sonar Cognitive
-Complexity. No validated universal "AI-maintainability" metric exists → measure
-operationally and say so. Spec: `specs/20260722-maintainability-assess-skill/`.
+**5. `assess` maintainability audit.** Read-only, stack-parameterized. **v1 shipped:**
+size × 90-day-churn hotspot concentration (strongest predictor), size outliers,
+test-gap, and lint debt (when the stack linter is installed). **Deferred** (stated in
+the skill's caveats + `assess.sh`): duplication, cognitive complexity, dependency
+cycles, LSP symbol-resolution rate. Baseline/delta snapshots, never an absolute grade
+or dashboard. Backing: DORA 2024, GitClear 2024, Sonar Cognitive Complexity. No
+validated universal "AI-maintainability" metric exists → measure operationally and
+say so. Spec: `specs/20260722-maintainability-assess-skill/`.
 
 **6. standards conformance.** One canonical rules file → generate AGENTS.md +
 vendor aliases; MCP tool manifests with allowlist + explicit consent; optional
