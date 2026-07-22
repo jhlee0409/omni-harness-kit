@@ -1,6 +1,6 @@
 # Spec: standards conformance
 
-- Status: Partial — AGENTS.md conformance shipped; MCP + SCIP deferred
+- Status: Implemented (2026-07-22) — AGENTS.md + MCP guidance + SCIP consume-if-present; auto `.mcp.json` and shipped indexer rejected
 - Created: 2026-07-22
 
 ## Problem / goal
@@ -19,19 +19,23 @@ across Claude Code / Codex / Cursor / others, not just Claude Code.
 
 ## Scope
 
-- **In (shipped this PR):**
+- **In (shipped):**
   - `AGENTS.md` canonical + `CLAUDE.md` `@import` wiring
     (`skills/introspect/aliases.sh`, `tests/aliases_test.sh`), decided in
     `docs/adr/0001-agentsmd-canonical-claudemd-imports-it.md`.
-  - `introspect` SKILL §4 step 1 + spine header updated to the AGENTS.md-canonical model.
-- **Out (deferred, with rationale — NOT shipped, not stubbed):**
-  - **MCP tool manifests.** The MCP spec (2025-06-18) makes user consent
-    **host-enforced**, not protocol-enforced — a portable kit can only ship a config
-    template + allowlist, not enforce consent. Needs its own design (which servers,
-    what allowlist shape) before code; deferring avoids shipping a security-theater
-    "consent" the kit cannot actually guarantee.
-  - **SCIP/LSIF consumption.** Requires a language indexer (heavy) — per the roadmap's
-    rejected-list, this belongs in an enterprise adapter, not the portable core.
+  - `introspect` SKILL §4 step 1 + spine header → AGENTS.md-canonical model.
+  - **MCP guidance** (`introspect` SKILL §5): the report tells the user which MCP
+    servers each generated critic benefits from (Playwright MCP → `ui-verify`; store
+    client / DB MCP → `db-verify`; LSP/SCIP code-intelligence → `blast-radius` /
+    `change-verifier`), with the least-privilege + host-enforced-consent model.
+  - **SCIP/LSIF consume-if-present** (`blast-radius` SKILL): use an existing LSP/SCIP
+    index when the host provides one; degrade to ripgrep + AST otherwise.
+- **Rejected (NOT built — would violate the kit's principles):**
+  - **Auto-generating `.mcp.json`.** MCP consent is host-enforced by the spec (2025-06-18);
+    a kit auto-writing server configs would be consent theater. The kit guides; the
+    user adds what they consent to.
+  - **Shipping a SCIP/LSIF indexer in the core.** Heavy; an enterprise-adapter concern,
+    per the roadmap's rejected-list. The kit consumes an index, never builds one.
 
 ## Acceptance
 
@@ -46,5 +50,6 @@ across Claude Code / Codex / Cursor / others, not just Claude Code.
 - Relies on Claude Code `@import` (verified: docs.claude.com/en/docs/claude-code/memory).
   If a runtime drops @import support, fall back to writing the block into CLAUDE.md
   directly — `aliases.sh` is the single place to change.
-- `[NEEDS CLARIFICATION: MCP scope]` and `[NEEDS CLARIFICATION: SCIP scope]` block the
-  MCP/SCIP sub-items leaving Draft; AGENTS.md conformance is independently complete.
+- Resolved: MCP scope = guidance (not auto-config); SCIP scope = consume-if-present
+  (not ship-indexer). Both bounded by the kit's portability + host-consent constraints;
+  AGENTS.md conformance remains independently complete.
