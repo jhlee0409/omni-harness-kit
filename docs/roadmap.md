@@ -22,7 +22,7 @@ ORDER; it does not authorize an autonomous multi-feature chain.
 | 3 | deterministic repo-map spine | 2 | render extension | **done** |
 | 4 | context-engineering discipline in the spine | 2 | spine/skill prose | **done** |
 | 5 | `assess` maintainability audit | 3 | skill + engine | **done** |
-| 6 | standards conformance (AGENTS.md / MCP / SCIP) | 3 | adapters | **needs own spec** |
+| 6 | standards conformance (AGENTS.md / MCP / SCIP) | 3 | adapters | **AGENTS.md done; MCP/SCIP deferred** |
 
 ## Wave 1 — discipline skills (highest leverage, near-zero new machinery)
 
@@ -72,13 +72,14 @@ vendor aliases; MCP tool manifests with allowlist + explicit consent; optional
 SCIP/LSIF consumption for navigation adapters. Backing: MCP spec (2025-06-18),
 AGENTS.md, SCIP (sourcegraph/scip).
 
-**Note (2026-07-22): item 6 is deliberately NOT rushed.** It is a design decision,
-not a quick wiring: the canonical-file choice (AGENTS.md vs CLAUDE.md, symlink vs
-duplicate — a real drift risk), the fact that MCP consent is host-enforced by the
-spec (a kit can only ship a config template + allowlist, not enforce consent), and
-SCIP needing a heavy indexer (enterprise-adapter only, per the rejected-list above)
-all warrant an ADR + spec before code. Rushing it would create the duplication the
-kit warns against. Next action for item 6: `/harness-kit:new-spec standards-conformance`.
+**Note (2026-07-22): AGENTS.md conformance shipped; MCP + SCIP deferred (honestly).**
+Decided in `docs/adr/0001-agentsmd-canonical-claudemd-imports-it.md`: `AGENTS.md` is
+canonical (cross-vendor standard), `CLAUDE.md` `@import`s it — one source of truth, no
+drift, no symlink (`skills/introspect/aliases.sh`, `tests/aliases_test.sh`). MCP and
+SCIP are NOT shipped and NOT stubbed: MCP consent is host-enforced by spec (a kit can
+only ship a config template + allowlist), and SCIP needs a heavy indexer
+(enterprise-adapter only). Both tracked in `specs/20260722-standards-conformance/` as
+deferred sub-items needing their own design before code.
 
 ## Explicitly rejected (research-backed)
 

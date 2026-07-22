@@ -62,6 +62,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   brand-new user would — proving the harness applies from an INSTALLED location
   (not just the dev checkout), the new skills ship, and every generated-spine route
   resolves to a shipped file (no dangling link a fresh install would hit).
+- **AGENTS.md conformance — the generated harness is now vendor-neutral.**
+  `introspect` writes the canonical spine to `AGENTS.md` (the cross-vendor standard
+  Codex / Cursor / others read directly) and wires `CLAUDE.md` to `@AGENTS.md`-import
+  it (`skills/introspect/aliases.sh`, idempotent, preserves user content) — one
+  source of truth, no duplication/drift, no symlink. Decided in
+  `docs/adr/0001-agentsmd-canonical-claudemd-imports-it.md`; tested by
+  `tests/aliases_test.sh` + a fresh-install check. Roadmap item 6 (AGENTS.md part);
+  MCP + SCIP conformance deferred with rationale (`specs/20260722-standards-conformance/`).
 
 ## [0.8.0] - 2026-07-21
 

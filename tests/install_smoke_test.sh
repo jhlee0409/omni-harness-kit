@@ -64,6 +64,13 @@ for a in $crit; do
   [ -f "$INSTALLED/agents/$a.md" ] && ok "spine critic $a → shipped agent" \
     || no "spine critic $a but agents/$a.md not shipped"
 done
+echo "[6] AGENTS.md-canonical wiring works from the installed tree"
+ag="$TMP/ag"; mkdir -p "$ag"; printf '# Agent harness — x\n\nrules\n' > "$ag/AGENTS.md"
+bash "$INSTALLED/skills/introspect/aliases.sh" "$ag" >/dev/null 2>&1 \
+  && ok "aliases.sh runs from install" || no "aliases.sh failed from install"
+grep -qx '@AGENTS.md' "$ag/CLAUDE.md" 2>/dev/null \
+  && ok "CLAUDE.md imports the canonical AGENTS.md" || no "CLAUDE.md missing @AGENTS.md import"
+
 
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
