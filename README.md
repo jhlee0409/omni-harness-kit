@@ -194,8 +194,10 @@ In a target repo:
 `introspect` detects the stack with a layered-precedence engine
 (`skills/introspect/detect.sh`) — lockfile/manifest/config presence first, configs
 read statically (never executed), upward-crawl + per-subtree for monorepos — then
-writes a marked, idempotent harness block into the repo's root `CLAUDE.md` plus a
-stack-specific architect agent under `.claude/agents/`.
+writes a marked, idempotent harness block into the repo's root `AGENTS.md` (the
+canonical cross-vendor file) and wires `CLAUDE.md` to `@AGENTS.md`-import it, plus a
+deterministic `.claude/repo-map.md` and a stack-specific architect agent under
+`.claude/agents/`.
 
 ## Detection design
 

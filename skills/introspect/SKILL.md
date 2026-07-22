@@ -128,16 +128,25 @@ Record the answer; it drives the `worktree_workflow` flag and the
 
 ## 4. Generate the files
 
-1. **Root `<target>/CLAUDE.md`** — the spine MUST live at the repo ROOT (only
-   `./CLAUDE.md` is auto-loaded; a `.claude/CLAUDE.md` is NOT). Two modes:
-   - **No CLAUDE.md exists** → write the full `templates/CLAUDE.md.spine`.
-   - **A CLAUDE.md already exists** → do NOT clobber it. Write a marked block
-     `<!-- harness-kit:start ... -->` … `<!-- harness-kit:end -->` (a condensed
-     spine under a `## Engineering harness` heading) using the idempotent updater
-     so a re-run replaces its own block instead of stacking a second copy:
+1. **Root harness — `AGENTS.md` (canonical) + `CLAUDE.md` (imports it).** Write the
+   spine to **`<target>/AGENTS.md`** — the cross-vendor standard file that Codex /
+   Cursor / other agents read directly — and wire `CLAUDE.md` to `@AGENTS.md`-import
+   it (Claude Code expands @-imports), so there is ONE source of truth: no
+   duplication, no drift, no symlink. See `docs/adr/0001-agentsmd-canonical-*`. The
+   files MUST live at the repo ROOT (only `./AGENTS.md` / `./CLAUDE.md` are
+   auto-loaded; nested copies are NOT). Two modes for AGENTS.md:
+   - **No AGENTS.md exists** → write the full `templates/CLAUDE.md.spine` to it.
+   - **An AGENTS.md already exists** → do NOT clobber it. Write a marked block
+     `<!-- harness-kit:start ... -->` … `<!-- harness-kit:end -->` (a condensed spine
+     under a `## Engineering harness` heading) via the idempotent updater so a re-run
+     replaces its own block instead of stacking a copy:
      ```bash
      printf '%s' "$BLOCK" | bash "${CLAUDE_PLUGIN_ROOT}/skills/introspect/update-block.sh" \
-       <target>/CLAUDE.md '<!-- harness-kit:start' '<!-- harness-kit:end -->'
+       <target>/AGENTS.md '<!-- harness-kit:start' '<!-- harness-kit:end -->'
+     ```
+   Then wire CLAUDE.md to import it (idempotent; preserves any other CLAUDE.md content):
+     ```bash
+     bash "${CLAUDE_PLUGIN_ROOT}/skills/introspect/aliases.sh" <target>
      ```
      (`$BLOCK` includes both markers. Lesson 5 generated-file marking.)
    Fill in either case:
