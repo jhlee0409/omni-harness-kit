@@ -236,6 +236,34 @@ while IFS= read -r d; do
   [ -n "$d" ] && add members "$d"
 done < <(printf '%s\n' "$_member_scan" | head -20)
 [ "${_member_total:-0}" -gt 20 ] && warn "monorepo has $_member_total member manifests (depth<=3); only the first 20 are listed"
+# D5: reconcile a Cargo [workspace] — the generic find can wrongly include an
+# `exclude`d crate or miss a `members` glob. Parse the workspace arrays (no tomllib
+# dependency — simple array regex), glob-expand members that have a Cargo.toml, drop
+# excluded dirs. Only when the root is a Cargo workspace; other stacks untouched.
+if [ -f Cargo.toml ] && grep -q '^[[:space:]]*\[workspace\]' Cargo.toml 2>/dev/null; then
+  members="$(python3 - "$members" <<'PY' 2>/dev/null || printf '%s' "$members"
+import re, glob, os, sys
+cur = [x for x in sys.argv[1].split(",") if x]
+try: t = open("Cargo.toml").read()
+except OSError: t = ""
+def arr(name):
+    m = re.search(r'^[ \t]*%s[ \t]*=[ \t]*\[(.*?)\]' % name, t, re.S | re.M)
+    return re.findall(r'"([^"]+)"', m.group(1)) if m else []
+norm = lambda p: os.path.normpath(p)
+inc = {norm(p) for pat in arr("members") for p in glob.glob(pat)
+       if os.path.isfile(os.path.join(p, "Cargo.toml"))}
+exc = set()
+for pat in arr("exclude"):
+    hits = glob.glob(pat)
+    exc |= {norm(p) for p in hits} if hits else {norm(pat)}
+out = []
+for d in [norm(x) for x in cur] + sorted(inc):
+    if d and d != "." and d not in exc and d not in out:
+        out.append(d)
+print(",".join(out))
+PY
+)"
+fi
 if [ -f pnpm-workspace.yaml ] || [ -f turbo.json ] || [ -f lerna.json ] \
    || grep -qs '"workspaces"' package.json 2>/dev/null || [ -n "$members" ]; then
   monorepo="true"

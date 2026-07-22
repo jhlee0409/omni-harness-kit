@@ -50,6 +50,22 @@ echo "[5] caveats always present (honest-limits contract)"
 jchk "$js" "len(d['caveats'])>=3 and any('AI-maintainability' in c for c in d['caveats'])" \
   && ok "caveats surfaced incl. no-universal-metric" || no "caveats missing"
 
+echo "[6] duplication detection — an identical block across two files is flagged"
+dp="$TMP/dup"; mkdir -p "$dp"
+block="$(python3 -c "print(chr(10).join('    step_%d = compute(%d) + adjust(%d)'%(i,i,i) for i in range(10)))")"
+for n in one two; do { echo "def f_$n():"; printf '%s\n' "$block"; } > "$dp/$n.py"; done
+jd="$(bash "$ASSESS" "$dp" 2>/dev/null)"
+jchk "$jd" "any(b['occurrences']>=2 for b in d['signals']['duplication']['blocks'])" \
+  && ok "cross-file duplicated block flagged" || no "duplication missed"
+
+echo "[7] no false duplication on distinct small files"
+nd="$TMP/nodup"; mkdir -p "$nd"
+python3 -c "print(chr(10).join('x_%d = %d'%(i,i) for i in range(12)))" > "$nd/a.py"
+python3 -c "print(chr(10).join('y_%d = %d * 2'%(i,i) for i in range(12)))" > "$nd/b.py"
+jn="$(bash "$ASSESS" "$nd" 2>/dev/null)"
+jchk "$jn" "len(d['signals']['duplication']['blocks'])==0" \
+  && ok "no duplicate blocks on distinct files" || no "false-positive duplication"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

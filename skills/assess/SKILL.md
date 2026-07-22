@@ -46,10 +46,13 @@ It reuses `introspect/detect.sh` for the stack, then emits JSON:
 - `signals.test` — is there a runnable verify command + any test files? `gap: true`
   means an agent can't cheaply prove a change here.
 - `signals.lint_debt` — the stack linter's finding count, only if it's installed.
+- `signals.duplication` — candidate clone blocks (8+ identical normalized lines seen
+  in ≥2 places), with locations; conservative, so treat as leads not verdicts.
 - `caveats` — always surface these to the reader.
 
-The engine is deterministic and cheap (git + `wc` + optional installed linter). It
-does NOT cover duplication or dependency cycles yet — say so; don't imply it did.
+The engine is deterministic and cheap (git + `wc` + a rolling-hash clone scan +
+optional installed linter). It does NOT cover dependency cycles or cognitive
+complexity yet — say so; don't imply it did.
 
 ## 2. Render the findings (human-decidable)
 

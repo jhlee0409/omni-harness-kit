@@ -47,9 +47,10 @@ rendering. All fix-now items below are fixed in this release with regression tes
 
 ## Known limitations (acceptable for 0.x)
 
-- **D5** — Cargo `[workspace]` `members`/`exclude` are not parsed; the generic
-  find-based member scan can include an excluded crate or miss a binary crate that has
-  no own `Cargo.toml`. Narrow (Cargo workspaces with `exclude`); tracked for a follow-up.
+- **D5 — FIXED (2026-07-22).** `detect.sh` now parses the Cargo `[workspace]`
+  `members` (glob-expanded, must have a `Cargo.toml`) and `exclude` arrays, so an
+  excluded crate is dropped and glob members are included. Regression: `detect_test.sh`
+  [18]. (Deep glob edge cases beyond one level remain best-effort.)
 - A dependency used only as a **cache / broker / queue** (e.g. redis) can false-positive
   as a verifiable store.
 - A script *body* (not its npm name) is captured for `dev`/`build`, so a `concurrently …`

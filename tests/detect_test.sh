@@ -192,6 +192,20 @@ check "$j" "['languages']" "node" "node still detected"
 printf '%s' "$j" | python3 -c "import json,sys;sys.exit(0 if 'shell' not in json.load(sys.stdin)['languages'] else 1)" \
   && ok "shell fallback suppressed when a real stack exists" || no "shell wrongly added over node"
 
+echo "[18] Cargo [workspace] (D5): members glob included, exclude honored"
+f="$TMP/cw"; mkdir -p "$f/crates/a" "$f/crates/b" "$f/vendored"
+cat > "$f/Cargo.toml" <<'T'
+[workspace]
+members = ["crates/*"]
+exclude = ["vendored"]
+T
+: > "$f/crates/a/Cargo.toml"; : > "$f/crates/b/Cargo.toml"; : > "$f/vendored/Cargo.toml"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['members']" "crates/a" "workspace member crates/a listed"
+check "$j" "['members']" "crates/b" "workspace member crates/b listed"
+printf '%s' "$j" | python3 -c "import json,sys;sys.exit(0 if 'vendored' not in json.load(sys.stdin)['members'] else 1)" \
+  && ok "excluded crate 'vendored' dropped from members (D5)" || no "excluded crate leaked into members"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

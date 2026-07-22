@@ -45,7 +45,7 @@ case " $langs " in
 esac
 
 python3 - "$TARGET" "$json_file" "$churn_file" "$lint_tool" "$lint_count" <<'PY'
-import json, os, sys, subprocess
+import json, os, sys, subprocess, hashlib
 
 target, json_file, churn_file, lint_tool, lint_count = sys.argv[1:6]
 d = json.load(open(json_file))
@@ -108,6 +108,39 @@ for f in files:
 hotspots.sort(key=lambda x: x["score"], reverse=True)
 hotspots = hotspots[:10]
 
+# Duplication — cheap and language-agnostic: hash sliding windows of WIN normalized
+# non-blank lines; a window seen in >=2 distinct places is a candidate clone. Kept
+# conservative (WIN=8, min length, overlap-deduped) to limit boilerplate false hits.
+WIN = 8
+seen = {}  # window hash -> [(file, start_line)]
+for f in files:
+    try:
+        raw = open(os.path.join(target, f), encoding="utf-8", errors="replace").read().splitlines()
+    except OSError:
+        continue
+    norm = [(i + 1, " ".join(ln.split())) for i, ln in enumerate(raw) if ln.strip()]
+    for j in range(len(norm) - WIN + 1):
+        window = norm[j:j + WIN]
+        text = "\n".join(t for _, t in window)
+        if len(text) < 80:  # skip trivial/short windows (imports, one-liners)
+            continue
+        h = hashlib.md5(text.encode("utf-8")).hexdigest()
+        seen.setdefault(h, []).append((f, window[0][0]))
+dups = []
+for _h, locs in seen.items():
+    if len(locs) < 2:
+        continue
+    uniq = []  # collapse near-overlapping windows within the same file
+    for fpath, ln in sorted(locs):
+        if uniq and uniq[-1][0] == fpath and ln - uniq[-1][1] < WIN:
+            continue
+        uniq.append((fpath, ln))
+    if len(uniq) >= 2:
+        dups.append({"occurrences": len(uniq),
+                     "locations": ["%s:%d" % (p, l) for p, l in uniq[:6]]})
+dups.sort(key=lambda x: x["occurrences"], reverse=True)
+dups = dups[:10]
+
 # Test discoverability.
 test_cmd = d.get("test_cmd", "") or ""
 test_files = [f for f in files
@@ -121,6 +154,7 @@ result = {
     "signals": {
         "size_outliers": [{"file": f, "loc": n} for n, f in outliers],
         "hotspots": hotspots,
+        "duplication": {"window_lines": WIN, "blocks": dups},
         "test": {"verify_command": test_cmd,
                  "test_files_found": len(test_files),
                  "gap": (test_cmd == "" or len(test_files) == 0)},
@@ -131,7 +165,7 @@ result = {
     },
     "caveats": [
         "One-shot snapshot, not a stored grade. Diff two runs for a trend.",
-        "Duplication and dependency-cycle detection are NOT in this version.",
+        "Dependency-cycle and cognitive-complexity detection are NOT in this version.",
         "No validated universal 'AI-maintainability' metric exists; these are "
         "structural proxies (hotspots have the strongest maintenance-pain evidence).",
     ],
