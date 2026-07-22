@@ -42,9 +42,10 @@ just whether the diff's lines are individually correct.
    structurally" rather than silently approving it.
 7. **Blast radius / centrality** — a small diff touching a widely-imported
    module, shared config, base component, or default value is NOT low-risk by
-   line count. Check who else calls/imports the touched symbol before judging
-   size. Under-scoped review of a high-centrality change is the failure mode
-   this check exists to catch.
+   line count. Enumerate who else calls/imports the touched symbol via the
+   `blast-radius` protocol (LSP references + AST + ripgrep, with its unresolved
+   regions surfaced) before judging size. Under-scoped review of a
+   high-centrality change is the failure mode this check exists to catch.
 
 ## Output (BLUF)
 - **Verdict**: SOUND / CONCERNS (list) / REGRESSION (a boundary / invariant broke).

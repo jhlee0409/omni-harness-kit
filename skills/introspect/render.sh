@@ -130,7 +130,7 @@ if langs:
     generated.append("%s-architect.md" % stack)
     # Reap a stale architect from a previous run whose slug changed (e.g. typescript →
     # node when the TS dep was dropped). Only render-OWNED slugs — never a user's agent.
-    RENDER_SLUGS = ("node", "typescript", "python", "go", "rust", "ruby", "java", "kotlin", "code")
+    RENDER_SLUGS = ("node", "typescript", "python", "go", "rust", "ruby", "java", "kotlin", "shell", "code")
     for s in RENDER_SLUGS:
         if s != stack:
             reap("%s-architect.md" % s)

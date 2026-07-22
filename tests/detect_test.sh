@@ -174,6 +174,24 @@ j="$(bash "$DETECT" "$f" 2>/dev/null)"
 printf '%s' "$j" | python3 -c "import json,sys;d=json.load(sys.stdin);sys.exit(0 if d['languages']==[] and d['frameworks']==[] and d['test_runner']=='' else 1)" \
   && ok "blank repo → all-empty detection, valid JSON" || no "blank repo broke detection"
 
+echo "[16] shell (fallback) — bash tooling repo with a *_test.sh suite, no packaged manifest"
+f="$TMP/sh"; mkdir -p "$f/tests"
+: > "$f/tests/foo_test.sh"
+printf '#!/usr/bin/env bash\necho hi\n' > "$f/run.sh"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['languages']" "shell" "shell detected as fallback stack"
+check "$j" "['test_runner']" "shell" "shell test_runner"
+check "$j" "['test_cmd']" 'do bash "$t"; done' "shell test_cmd is a runnable loop"
+
+echo "[17] shell must NOT override a real stack (node repo that also has tests/*_test.sh)"
+f="$TMP/nodeplussh"; mkdir -p "$f/tests"
+printf '{"name":"n","scripts":{"test":"vitest run"},"devDependencies":{"vitest":"^1"}}' > "$f/package.json"
+: > "$f/tests/foo_test.sh"
+j="$(bash "$DETECT" "$f" 2>/dev/null)"
+check "$j" "['languages']" "node" "node still detected"
+printf '%s' "$j" | python3 -c "import json,sys;sys.exit(0 if 'shell' not in json.load(sys.stdin)['languages'] else 1)" \
+  && ok "shell fallback suppressed when a real stack exists" || no "shell wrongly added over node"
+
 echo ""
 echo "RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

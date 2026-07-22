@@ -21,11 +21,13 @@ prove a change is complete — or list exactly what is missing.
    and symbols. Identify renamed / added / removed functions, API endpoints, DB
    collection/table names, fields, and components.
 
-2. **Stale-reference sweep.** Grep BOTH the old and new symbol names across the
-   repo (exclude `node_modules`, `.venv`, `dist`, `build`, `.next`, vendored
-   dirs). Confirm: no callsite still uses the old name, and every callsite of a
-   changed signature was updated. `grep`/`rg` catches string and symbol refs the
-   import graph misses.
+2. **Stale-reference sweep.** Enumerate every callsite via the
+   `blast-radius` protocol (LSP references + AST + a ripgrep sweep of BOTH the old
+   and new names, excluding `node_modules`, `.venv`, `dist`, `build`, `.next`,
+   vendored dirs). Confirm: no callsite still uses the old name, every callsite of
+   a changed signature was updated, and the protocol's UNKNOWN regions (dynamic /
+   reflection / generated) were checked by hand — an unresolved edge is a gap, not
+   a pass.
 
 3. **Wiring check.** Trace each new field / prop / component / endpoint end to
    end — is it actually consumed? A new field no code reads, a component imported

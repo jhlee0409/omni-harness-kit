@@ -6,6 +6,63 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`introspect` now detects shell-tooling repos.** `detect.sh` gained a `shell`
+  fallback stack, recognized ONLY when no packaged-language manifest (package.json /
+  pyproject / go.mod / Cargo.toml / Gemfile / pom.xml) is present, so a Node/Python
+  repo with a `scripts/` dir is never mislabeled. The marker is a shell test suite
+  (`tests/*_test.sh`, `tests/test_*.sh`, or `*.bats`), which fills a runnable
+  `test_cmd` — so the verify-loop hook is no longer a no-op on bash-only repos (the
+  kit's own repo included), and `render.sh` emits a `shell-architect`.
+- **`blast-radius` impact-enumeration skill.** Given a target/changed symbol, it
+  enumerates the impact set layered strongest-signal-first (LSP references /
+  implementations / call hierarchy → tree-sitter AST → ripgrep both-names sweep),
+  deduped with provenance, and — the point of the skill — surfaces an explicit
+  UNKNOWN section (dynamic dispatch / reflection / generated code) plus an
+  "enumeration complete?" checklist. It never claims completeness, only "all
+  discovered edges + listed unresolved regions". `change-verifier` (stale-reference
+  sweep) and `architecture-reviewer` (blast-radius/centrality check) now route to
+  this one protocol instead of each restating ad-hoc callsite hunting. First item
+  of the agent-maintainability roadmap (`docs/roadmap.md`).
+- **`localize` skill — the localize → edit → validate loop.** Requires a written
+  localization artifact (target `file:line`s + the evidence that put them there +
+  remaining uncertainty) BEFORE any edit, uses `blast-radius` for the impact set,
+  then gates the edit on a focused test (failing → passing) plus the stack
+  regression run. Encodes the empirical finding that staged localization beats
+  broad autonomous exploration at a fraction of the cost (Agentless, arXiv
+  2407.01489); bounded to one change → one validation → the human gate, no blind
+  retry loops. Roadmap item 2 (`docs/roadmap.md`).
+- **`introspect` now generates `.claude/repo-map.md`.** A deterministic navigation
+  map (stack / entry points / top-level layout / monorepo members / where tests
+  live) via `skills/introspect/repomap.sh`, so an agent orients on a whole codebase
+  by progressive disclosure — read the map, drill into the exact subtree — rather
+  than blind-globbing. Facts only (dir roles are name-based heuristics; module
+  responsibilities are left for a human to fill); refreshed by re-running
+  introspect, not a stored metric. Roadmap item 3 (`docs/roadmap.md`).
+- **Spine gained a `0.7 Context discipline` rule.** Generated `CLAUDE.md` spines
+  now instruct: orient via `.claude/repo-map.md` then read the exact subtree
+  (progressive disclosure); keep the ask/acceptance/invariants at the context edges
+  because models attend to the start/end, not the middle (lost-in-the-middle,
+  arXiv 2307.03172; NoLiMa, arXiv 2502.05167); keep a NOTES scratch and resume via
+  handoff/pickup; delegate deep exploration to a scoped subagent returning a
+  distilled summary. Roadmap item 4 (`docs/roadmap.md`).
+- **`assess` skill — read-only maintainability audit.** `skills/assess/assess.sh`
+  emits deterministic, stack-parameterized structural signals — size × 90-day-churn
+  hotspots (primary), ≥400-line size outliers, test-discoverability gaps, and lint
+  debt (only if the stack linter is already installed) — as JSON; the skill renders
+  a severity × effort findings table and proposes the top-3 fixes, each handed to
+  `new-spec` as its own PR. It stores no grade/dashboard (one-shot snapshot; diff
+  two runs for a trend), edits nothing, and documents that no validated universal
+  "AI-maintainability" metric exists. Compatible with the no-metrics Tier-3 stance
+  because it is human-invoked and persists nothing. Roadmap item 5; spec
+  `specs/20260722-maintainability-assess-skill/`.
+- **Fresh-install end-to-end smoke test** (`tests/install_smoke_test.sh`). Packages
+  the tree as a plugin is installed, points `CLAUDE_PLUGIN_ROOT` at that isolated
+  copy, and runs the introspect engine against throwaway node + shell targets as a
+  brand-new user would — proving the harness applies from an INSTALLED location
+  (not just the dev checkout), the new skills ship, and every generated-spine route
+  resolves to a shipped file (no dangling link a fresh install would hit).
+
 ## [0.8.0] - 2026-07-21
 
 ### Fixed

@@ -59,3 +59,46 @@ rendering. All fix-now items below are fixed in this release with regression tes
   slot leak possible, the store idioms are a table in the script. The **only**
   probabilistic residue left is the spine's judgment prose (architecture note, stack
   summary), filled by the LLM; review that before committing.
+
+## 2026-07-22 — agent-maintainability wave: live dogfood + honest-limit closure
+
+The new capabilities (blast-radius / localize / assess / repo-map / shell detection)
+were exercised live against THIS repo and the load-bearing research was spot-checked
+against primary sources. What was actually run, and the residual limit stated plainly.
+
+### Gap 3 (research soundness) — spot-verified against primary source
+Two load-bearing claims re-read directly (not via the scout summary):
+- **Agentless** (arXiv 2407.01489, abstract): *"32.00%, 96 correct fixes … low cost
+  ($0.70) … highest performance compared with all existing open-source software
+  agents"* — matches the synthesis verbatim. Backs the `localize` skill's staged
+  localize→repair→validate over broad autonomy.
+- **Lost in the Middle** (arXiv 2307.03172, abstract): *"performance is often highest
+  when relevant information occurs at the beginning or end … significantly degrades …
+  in the middle … even for explicitly long-context models"* — matches. Backs spine
+  rule `0.7` (keep constraints at the context edges).
+- Result: the scouts did not fabricate the two claims checked. Other citations remain
+  spot-checkable via their URLs (each carries a date + confidence in the brief).
+
+### Gap 2 (live skill behavior) — run on this repo
+- **`blast-radius`** on the `detect.sh` output schema: enumerated its real impact set
+  — callers (`render.sh`, `repomap.sh`, `assess.sh`, and 3 test files) plus the
+  JSON-key consumers (`render.sh`/`repomap.sh`/`assess.sh` read `languages` /
+  `frameworks` / `data_layer` / `project_name` / `test_cmd` / `members`). Bash has no
+  LSP, so the protocol degraded to AST/ripgrep exactly as the skill specifies, and
+  correctly labels that as reduced-confidence (no false completeness claim).
+- **`assess`** on this repo: real hotspots ranked (`detect.sh` score 2088, `render.sh`
+  1463, `tests/detect_test.sh` 1379 …), `test gap: false`, `shellcheck` debt `0`, no
+  size outliers. Valid JSON, human-decidable ranking — the skill's actual deliverable.
+- **`localize`**: this wave's changes were themselves made localize-disciplined —
+  each change localized before editing, then gated by `tests/*_test.sh` + the new
+  `install_smoke` e2e (the validate step). The session is the dogfood.
+
+### Gap 1 (LLM-filled spine prose) — bounded, not eliminated (honest)
+This is irreducible by design: the spine's judgment slots (architecture note, stack
+summary, agent-routing prose) are LLM-filled, so they cannot be made deterministic
+without removing the judgment. It is BOUNDED, not solved: (a) the agent files are
+rendered deterministically (above), shrinking the residue to prose only; (b) the
+slot contract is test-enforced (`generation_contract_test`); (c) `introspect` was
+dogfooded on 6 real repos (above); (d) the SKILL mandates a critic review of the
+generated spine before commit. Claiming this gap is "closed" would itself be the
+overclaim the kit's `0.6` rule forbids — it is managed, and the management is tested.

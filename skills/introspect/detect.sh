@@ -199,6 +199,21 @@ if [ -f pom.xml ] || [ -f build.gradle ] || [ -f build.gradle.kts ]; then
   fi
 fi
 
+# --- Shell (FALLBACK) — detected ONLY when no packaged-language manifest was found,
+# so a Node/Python/Go/… repo with a scripts/ dir is never mislabeled "shell". The
+# marker is a shell TEST SUITE (tests/*_test.sh, tests/test_*.sh, or *.bats): the
+# strongest signal the repo is a shell-tooling project meant to be verified. Without a
+# suite there is nothing to drive the verify loop, so we stay stackless (universal spine).
+if [ -z "$languages" ]; then
+  if compgen -G "tests/*.bats" >/dev/null 2>&1 || compgen -G "*.bats" >/dev/null 2>&1; then
+    add languages "shell"; test_runner="bats"; test_cmd="bats tests/"
+  elif compgen -G "tests/*_test.sh" >/dev/null 2>&1; then
+    add languages "shell"; test_runner="shell"; test_cmd='for t in tests/*_test.sh; do bash "$t"; done'
+  elif compgen -G "tests/test_*.sh" >/dev/null 2>&1; then
+    add languages "shell"; test_runner="shell"; test_cmd='for t in tests/test_*.sh; do bash "$t"; done'
+  fi
+fi
+
 # --- L3: monorepo topology — list member manifests (polyglot-aware) ---
 # Scan subtrees so a polyglot repo (e.g. python root + node subdir) is flagged as a
 # monorepo and its members listed. This only NAMES members; introspect re-runs this

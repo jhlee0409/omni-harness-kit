@@ -41,6 +41,15 @@ State a measured fact or "not verified — <what's missing>", never an unverifie
 conclusion. For a high-stakes conclusion the user will act on, delegate to
 `claim-checker`.
 
+**0.7 Context discipline.** On a large codebase, orient via `.claude/repo-map.md`
+first, then read the exact subtree — progressive disclosure, not blind-globbing.
+Keep the highest-value context (the ask, acceptance, invariants) at the START and
+restate it near your action: models attend to the edges of a long context, not the
+middle, so a constraint buried mid-prompt is effectively unseen. For a long task
+keep a NOTES scratch (decisions / unresolved / touched files) and resume from it
+via `/harness-kit:handoff` + `/harness-kit:pickup`. Delegate deep exploration to a
+scoped subagent that returns a distilled summary, not a raw transcript.
+
 ## Test discipline
 {{TEST_DISCIPLINE}}
 
@@ -55,9 +64,18 @@ conclusion. For a high-stakes conclusion the user will act on, delegate to
   never the repo root.
 - **Resume.** Stopping mid-task → `/harness-kit:handoff` writes a resume block; a
   fresh session continues with `/harness-kit:pickup`.
-- **Build.** A non-trivial behavior change → `/harness-kit:tdd` (red → green →
-  refactor) or delegate to `tdd-runner`. A hard bug / regression →
-  `/harness-kit:diagnose` (reproduce → minimize → hypothesize → fix the cause).
+- **Build.** A change whose edit site isn't obvious → `/harness-kit:localize`
+  (localize → edit → validate: name the target with evidence, then test-gate). A
+  non-trivial behavior change → `/harness-kit:tdd` (red → green → refactor) or
+  delegate to `tdd-runner`. A hard bug / regression → `/harness-kit:diagnose`
+  (reproduce → minimize → hypothesize → fix the cause).
+- **Impact.** Before a change touching a shared / exported / widely-imported
+  symbol, or any signature / rename change, run `/harness-kit:blast-radius
+  <symbol>` to enumerate the impact set (references / callers / implementations /
+  reverse imports) + the unresolved regions to check by hand — before editing.
+- **Audit.** Before a cleanup/refactor pass or when inheriting the code, run
+  `/harness-kit:assess` for a read-only maintainability snapshot (size × churn
+  hotspots, test gaps, lint debt) → discrete fix proposals, each its own PR.
 {{WORKTREE_RULE}}
 
 ## Agents — the main agent delegates here automatically (no need to name them)
