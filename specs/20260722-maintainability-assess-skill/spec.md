@@ -73,16 +73,12 @@ finding gone.
 
 ## Risks / open questions
 
-- `[NEEDS CLARIFICATION: Tier-3 boundary]` — this is a human-invoked one-shot
-  *assessment skill*, not a generated/promised runtime metrics layer, so it is
-  technically distinct from the §3 Tier-3 prohibition. But it is ADJACENT. Decide:
-  accept the distinction explicitly (document it in the skill + SKILL §3), or judge
-  it too close and drop the feature. **Blocks leaving Draft.**
-- `[NEEDS CLARIFICATION: deletion-bias gate]` — `AGENTS.md` requires a new
-  machine to cite (a) a real maintenance-pain incident as motivation and (b) an
-  equivalent deletion/merge. Candidate: fold overlapping checks so `assess` reuses
-  `architecture-reviewer`'s taxonomy rather than duplicating it, and/or retire any
-  redundant prose. **Blocks leaving Draft.**
+- **RESOLVED — Tier-3 boundary:** accepted the distinction — a human-invoked one-shot
+  assessment skill that persists nothing is distinct from the rejected runtime metrics
+  layer; documented in `skills/assess/SKILL.md` ("Scope boundary").
+- **RESOLVED — deletion-bias gate:** motivation = the research pass + maintenance
+  thesis (`docs/roadmap.md`); `assess` reuses `introspect/detect.sh` (no parallel
+  detection engine) rather than adding a second one.
 - Signal quality: cheap structural signals can false-positive (a legitimately large
   generated file, a cache/broker dep). Each signal needs a documented false-positive
   escape, mirroring `detect.sh`'s existing 0.x heuristic caveats.
